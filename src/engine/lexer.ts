@@ -3,7 +3,7 @@
 //   value: 'SELECT'  // ou 'age', '18', 'Rio', '>=', ','
 // }
 
-type TokenType =
+export type TokenType =
   | 'KEYWORD'
   | 'IDENTIFIER'
   | 'NUMBER'
@@ -11,7 +11,7 @@ type TokenType =
   | 'OPERATOR'
   | 'SYMBOL'
 
-type Token = {
+export type Token = {
   type: TokenType;
   value: string;
 }
