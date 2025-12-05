@@ -1,0 +1,137 @@
+:root {
+  --bg: #0d1117;
+  --panel: #161b22;
+  --border: #30363d;
+  --text: #c9d1d9;
+  --green: #238636;
+  --green-hover: #2ea043;
+  --blue: #58a6ff;
+  --mono: 'Menlo', 'Consolas', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1rem;
+  gap: 1rem;
+}
+
+.top input {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: #fff;
+  padding: 1rem;
+  font-family: var(--mono);
+  font-size: 1rem;
+  border-radius: 6px;
+  outline: none;
+}
+
+.top input:focus {
+  border-color: var(--blue);
+}
+
+.action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+button {
+  background: var(--green);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+button:hover {
+  background: var(--green-hover);
+}
+
+.main-area {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100%;
+}
+
+.label {
+  font-size: 0.8rem;
+  color: #8b949e;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.output-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.output-header>button {
+  display: flex;
+  justify-content: space-between;
+  background: none;
+  color: #8b949e;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+textarea,
+pre {
+  flex: 1;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  color: var(--text);
+  resize: none;
+  overflow: auto;
+}
+
+textarea:focus {
+  outline: 1px solid var(--blue);
+}
+
+footer>small>a {
+  text-decoration: none;
+  font-size: 0.8rem;
+  color: #8b949e;
+}
+
+.error {
+  border-color: #f85149 !important;
+  color: #f85149;
+}

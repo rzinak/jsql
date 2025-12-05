@@ -27,7 +27,7 @@ const KEYWORDS = [
   "NOT"
 ];
 
-const tokenize = (query: string): Token[] => {
+export const tokenize = (query: string): Token[] => {
   let tokens: Token[] = [];
 
   let current = 0;
@@ -104,7 +104,6 @@ const tokenize = (query: string): Token[] => {
     if (isLetter(char)) {
       let val: string = '';
       while (isLetter(query[current]) || isDigit(query[current])) {
-        console.log(query[current])
         val += query[current];
         current++;
       }
@@ -132,6 +131,6 @@ const tokenize = (query: string): Token[] => {
   return tokens;
 }
 
-const query = 'SELECT name, age FROM users WHERE age >= 18';
-const t = tokenize(query);
-console.log(t);
+// const query = 'SELECT name, age FROM users WHERE age >= 18';
+// const t = tokenize(query);
+// console.log(t);

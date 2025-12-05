@@ -1,18 +1,20 @@
+import type { Operator } from "./evaluator";
 import type { Token, TokenType } from "./lexer";
 
-type Where = {
-  [key: string]: number | string;
+export type Where = {
+  "left": number | string;
+  "operator": Operator;
+  "right": number | string;
 }
 
-type AST = {
+export type AST = {
   "type": "SelectStatement";
   "columns": string[];
   "from": string;
   "where": Where | null;
 }
 
-// @ts-ignore
-const parse = (tokens: Token[]): AST => {
+export const parse = (tokens: Token[]): AST => {
   let current = 0;
   const columns: string[] = [];
 
@@ -109,18 +111,18 @@ const parse = (tokens: Token[]): AST => {
   // }
 }
 
-const t: Token[] = [
-  { type: 'KEYWORD', value: 'SELECT' },
-  { type: 'IDENTIFIER', value: 'name' },
-  { type: 'SYMBOL', value: ',' },
-  { type: 'IDENTIFIER', value: 'age' },
-  { type: 'KEYWORD', value: 'FROM' },
-  { type: 'IDENTIFIER', value: 'users' },
-  { type: 'KEYWORD', value: 'WHERE' },
-  { type: 'IDENTIFIER', value: 'age' },
-  { type: 'OPERATOR', value: '>=' },
-  { type: 'NUMBER', value: '18' }
-]
+// const t: Token[] = [
+//   { type: 'KEYWORD', value: 'SELECT' },
+//   { type: 'IDENTIFIER', value: 'name' },
+//   { type: 'SYMBOL', value: ',' },
+//   { type: 'IDENTIFIER', value: 'age' },
+//   { type: 'KEYWORD', value: 'FROM' },
+//   { type: 'IDENTIFIER', value: 'users' },
+//   { type: 'KEYWORD', value: 'WHERE' },
+//   { type: 'IDENTIFIER', value: 'age' },
+//   { type: 'OPERATOR', value: '>=' },
+//   { type: 'NUMBER', value: '18' }
+// ]
 
 // const t: Token[] = [
 //   { type: 'KEYWORD', value: 'SELECT' },
@@ -129,4 +131,4 @@ const t: Token[] = [
 //   { type: 'IDENTIFIER', value: 'users' }
 // ]
 
-console.log(JSON.stringify(parse(t), null, 2));
+// console.log(JSON.stringify(parse(t), null, 2));
