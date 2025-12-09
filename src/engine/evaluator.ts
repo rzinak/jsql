@@ -39,7 +39,6 @@ export const evaluate = (ast: AST, data: any[]) => {
           newRow[col] = row[col];
         }
       });
-      console.log(newRow)
       return newRow;
 
     });

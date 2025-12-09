@@ -81,8 +81,7 @@ const INITIAL_DATA = [
 ]
 
 jsonInput.value = JSON.stringify(INITIAL_DATA, null, 2);
-// query.value = 'SELECT name, city, age FROM data WHERE age < 22';
-query.value = 'SELECT * FROM data';
+query.value = 'select name, city, age from data where age < 22';
 
 clearInputBtn.addEventListener('click', () => {
   try {
