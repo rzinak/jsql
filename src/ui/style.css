@@ -1,6 +1,7 @@
 :root {
   --bg: #0d1117;
   --panel: #161b22;
+  --btn-hover: #161b22;
   --border: #30363d;
   --text: #c9d1d9;
   --green: #238636;
@@ -76,10 +77,12 @@ button:hover {
 }
 
 .panel {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   height: 100%;
+  min-height: 0;
 }
 
 .label {
@@ -89,22 +92,70 @@ button:hover {
   text-transform: uppercase;
 }
 
+.input-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.input-header>button {
+  position: absolute;
+  top: 2.5rem;
+  right: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  background: var(--bg);
+  color: #5b6978;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.25rem .75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: all .25s ease-in-out;
+  opacity: 0;
+  pointer-events: none
+}
+
+.panel:hover .input-header>button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.input-header>button:hover {
+  background: #1f242b;
+}
+
 .output-header {
   display: flex;
   justify-content: space-between;
 }
 
 .output-header>button {
+  position: absolute;
+  top: 2.5rem;
+  right: 1.5rem;
   display: flex;
   justify-content: space-between;
-  background: none;
-  color: #8b949e;
-  border: none;
-  padding: 0;
-  border-radius: 0;
+  background: var(--bg);
+  color: #5b6978;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.25rem .75rem;
+  border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
   font-size: 0.8rem;
+  transition: all .25s ease-in-out;
+  opacity: 0;
+  pointer-events: none
+}
+
+.panel:hover .output-header>button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.output-header>button:hover {
+  background: #1f242b;
 }
 
 textarea,
@@ -119,6 +170,7 @@ pre {
   color: var(--text);
   resize: none;
   overflow: auto;
+  min-height: 0;
 }
 
 textarea:focus {

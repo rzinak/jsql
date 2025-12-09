@@ -20,13 +20,16 @@
 
     <div class="main-area">
       <div class="panel">
-        <span class="label">Input JSON</span>
+        <div class="input-header">
+          <span class="label">Input JSON</span>
+          <button id="clear-input-btn">Clear Input</button>
+        </div>
         <textarea id="json-input" spellcheck="false"></textarea>
       </div>
       <div class="panel">
         <div class="output-header">
           <span class="label">Result</span>
-          <button id="clear-btn">Clear Output</button>
+          <button id="clear-output-btn">Clear Output</button>
         </div>
         <pre id="result-output"></pre>
       </div>
