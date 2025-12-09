@@ -78,7 +78,7 @@ export const parse = (tokens: Token[]): AST => {
   if (check('KEYWORD', 'WHERE')) {
     consume('KEYWORD', 'WHERE');
     const left = consume('IDENTIFIER').value;
-    const operator = consume('OPERATOR').value;
+    const operator = (consume('OPERATOR').value) as Operator;
     const rightToken = consume(tokens[current].type);
     const right = rightToken.type === 'NUMBER'
       ? Number(rightToken.value)
