@@ -1,13 +1,42 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>jsql</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/engine/lexer.ts"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>jsql</title>
+  <link rel="stylesheet" href="/src/ui/style.css" />
+</head>
+
+<body>
+  <div class="app">
+    <div class="top">
+      <input type="text" id="query-input" placeholder="SELECT * FROM users..." autocomplete="off" spellcheck="false">
+    </div>
+
+    <div class="action">
+      <button id="run-btn">Run Query</button>
+    </div>
+
+    <div class="main-area">
+      <div class="panel">
+        <span class="label">Input JSON</span>
+        <textarea id="json-input" spellcheck="false"></textarea>
+      </div>
+      <div class="panel">
+        <div class="output-header">
+          <span class="label">Result</span>
+          <button id="clear-btn">Clear Output</button>
+        </div>
+        <pre id="result-output"></pre>
+      </div>
+    </div>
+    <footer>
+      <small><a href="https://github.com/rzinak/jsql" rel="noreferrer"
+          target="_blank">github.com/rzinak/jsql</a></small>
+    </footer>
+  </div>
+  <script type="module" src="/src/ui/main.ts"></script>
+</body>
+
 </html>
