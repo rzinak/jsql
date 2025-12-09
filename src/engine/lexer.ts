@@ -24,7 +24,8 @@ const KEYWORDS = [
   "BY",
   "AND",
   "OR",
-  "NOT"
+  "NOT",
+  "LIMIT"
 ];
 
 export const tokenize = (query: string): Token[] => {
@@ -107,8 +108,8 @@ export const tokenize = (query: string): Token[] => {
         val += query[current];
         current++;
       }
-      if (KEYWORDS.includes(val)) {
-        tokens.push({ type: 'KEYWORD', value: val });
+      if (KEYWORDS.includes(val.toUpperCase())) {
+        tokens.push({ type: 'KEYWORD', value: val.toUpperCase() });
       } else {
         tokens.push({ type: 'IDENTIFIER', value: val });
       }

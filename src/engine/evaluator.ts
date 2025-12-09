@@ -30,18 +30,25 @@ export const evaluate = (ast: AST, data: any[]) => {
   }
 
   if (ast.columns[0] === '*') {
-    return result;
+    if (ast.limit) {
+      return result.slice(0, ast.limit);
+    } else {
+      return result;
+    }
   } else {
-    return result.map((row) => {
+    result.map((row) => {
       const newRow: any = {}
       ast.columns.forEach((col) => {
         if (row.hasOwnProperty(col)) {
           newRow[col] = row[col];
         }
       });
-      console.log(newRow)
       return newRow;
-
     });
+    if (ast.limit) {
+      return result.slice(0, ast.limit);
+    } else {
+      return result
+    }
   }
 }
