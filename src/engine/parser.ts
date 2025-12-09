@@ -12,6 +12,7 @@ export type AST = {
   "columns": string[];
   "from": string;
   "where": Where | null;
+  "limit": number | null;
 }
 
 export const parse = (tokens: Token[]): AST => {
@@ -83,19 +84,33 @@ export const parse = (tokens: Token[]): AST => {
     const right = rightToken.type === 'NUMBER'
       ? Number(rightToken.value)
       : rightToken.value;
-
     where = {
       left,
       operator,
       right
     }
   }
+  let limit: number | null = null;
+  if (check('KEYWORD', 'LIMIT')) {
+    consume('KEYWORD', 'LIMIT');
+    limit = Number((consume('NUMBER').value));
+
+  }
+
+  console.log({
+    "type": "SelectStatement",
+    "columns": columns,
+    "from": table,
+    where,
+    limit
+  })
 
   return {
     "type": "SelectStatement",
     "columns": columns,
     "from": table,
-    where
+    where,
+    limit
   }
 
   // return {
@@ -107,7 +122,8 @@ export const parse = (tokens: Token[]): AST => {
   //     "left": "age",
   //     "operator": ">=",
   //     "right": 18
-  //   }
+  //   },
+  //   "limit": 1
   // }
 }
 

@@ -80,8 +80,11 @@ const INITIAL_DATA = [
   { "id": 50, "name": "Xena", "age": 22, "city": "Londrina" }
 ]
 
+// TODO: add support for the rest of SQL keywords
+
 jsonInput.value = JSON.stringify(INITIAL_DATA, null, 2);
-query.value = 'select name, city, age from data where age < 22';
+// query.value = 'select name, city, age from data where age < 22';
+query.value = 'select id, name, age from data where age < 30 limit 3';
 
 clearInputBtn.addEventListener('click', () => {
   try {

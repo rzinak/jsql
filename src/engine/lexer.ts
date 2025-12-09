@@ -24,7 +24,8 @@ const KEYWORDS = [
   "BY",
   "AND",
   "OR",
-  "NOT"
+  "NOT",
+  "LIMIT"
 ];
 
 export const tokenize = (query: string): Token[] => {
