@@ -20,13 +20,6 @@ import { parse } from "../engine/parser.ts";
 // const evaluated = evaluate(parsed, database);
 // console.log(evaluated);
 
-const query = document.getElementById('query-input') as HTMLInputElement;
-const runBtn = document.getElementById('run-btn') as HTMLButtonElement;
-const clearInputBtn = document.getElementById('clear-input-btn') as HTMLButtonElement;
-const clearOutputBtn = document.getElementById('clear-output-btn') as HTMLButtonElement;
-const jsonInput = document.getElementById('json-input') as HTMLTextAreaElement;
-const resultOutput = document.getElementById('result-output') as HTMLPreElement;
-
 const INITIAL_DATA = [
   { "id": 1, "name": "Alice", "age": 25, "city": "Rio" },
   { "id": 2, "name": "Bob", "age": 17, "city": "SP" },
@@ -80,11 +73,35 @@ const INITIAL_DATA = [
   { "id": 50, "name": "Xena", "age": 22, "city": "Londrina" }
 ]
 
+const query = document.getElementById('query-input') as HTMLInputElement;
+const runBtn = document.getElementById('run-btn') as HTMLButtonElement;
+const clearInputBtn = document.getElementById('clear-input-btn') as HTMLButtonElement;
+const clearOutputBtn = document.getElementById('clear-output-btn') as HTMLButtonElement;
+const jsonInput = document.getElementById('json-input') as HTMLTextAreaElement;
+const resultOutput = document.getElementById('result-output') as HTMLPreElement;
+
 // TODO: add support for the rest of SQL keywords
 
 jsonInput.value = JSON.stringify(INITIAL_DATA, null, 2);
 // query.value = 'select name, city, age from data where age < 22';
-query.value = 'select id, name, age from data where age < 30 limit 3';
+
+// query.value = 'select id, name, age from data where age < 30 order by id desc limit 3';
+query.value = 'select * from data where age <= 21 order by id asc';
+
+const run = () => {
+  try {
+    resultOutput.classList.remove('error');
+    resultOutput.textContent = '';
+    const tokens = tokenize(query.value);
+    const parsed = parse(tokens);
+    const parsedInputJson = JSON.parse(jsonInput.value);
+    const evaluated = evaluate(parsed, parsedInputJson);
+    resultOutput.textContent = JSON.stringify(evaluated, null, 2);
+  } catch (err: any) {
+    resultOutput.classList.add('error');
+    resultOutput.textContent = err.message;
+  }
+}
 
 clearInputBtn.addEventListener('click', () => {
   try {
@@ -105,17 +122,11 @@ clearOutputBtn.addEventListener('click', () => {
   }
 });
 
-runBtn?.addEventListener('click', () => {
-  try {
-    resultOutput.classList.remove('error');
-    resultOutput.textContent = '';
-    const tokens = tokenize(query.value);
-    const parsed = parse(tokens);
-    const parsedInputJson = JSON.parse(jsonInput.value);
-    const evaluated = evaluate(parsed, parsedInputJson);
-    resultOutput.textContent = JSON.stringify(evaluated, null, 2);
-  } catch (err: any) {
-    resultOutput.classList.add('error');
-    resultOutput.textContent = err.message;
+runBtn?.addEventListener('click', run);
+query?.addEventListener('keydown', (event) => {
+  if (event.ctrlKey && event.key === 'Enter') {
+    console.log('pressed');
+    event.preventDefault();
+    run();
   }
 });
