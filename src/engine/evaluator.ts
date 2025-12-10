@@ -42,7 +42,7 @@ export const evaluate = (ast: AST, data: any[]) => {
       return result;
     }
   } else {
-    result.map((row) => {
+    result = result.map((row) => {
       const newRow: any = {}
       ast.columns.forEach((col) => {
         if (row.hasOwnProperty(col)) {
@@ -51,10 +51,11 @@ export const evaluate = (ast: AST, data: any[]) => {
       });
       return newRow;
     });
+
     if (ast.limit) {
       return result.slice(0, ast.limit);
     } else {
-      return result
+      return result;
     }
   }
 }
