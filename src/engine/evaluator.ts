@@ -52,6 +52,14 @@ export const evaluate = (ast: AST, data: any[]) => {
       return newRow;
     });
 
+    if (ast.order && ast.order.direction === 'ASC') {
+      const prop = ast.order.prop;
+      result.sort((a, b) => a[prop] - b[prop]);
+    } else if (ast.order && ast.order.direction === 'DESC') {
+      const prop = ast.order.prop;
+      result.sort((a, b) => b[prop] - a[prop]);
+    }
+
     if (ast.limit) {
       return result.slice(0, ast.limit);
     } else {
