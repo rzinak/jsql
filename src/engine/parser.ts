@@ -91,6 +91,12 @@ export const parse = (tokens: Token[]): AST => {
           prop,
           direction
         }
+      } else {
+        order = {
+          type: "OrderSpecification",
+          prop,
+          direction: null
+        }
       }
     }
   }

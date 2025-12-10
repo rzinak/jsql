@@ -86,7 +86,7 @@ jsonInput.value = JSON.stringify(INITIAL_DATA, null, 2);
 // query.value = 'select name, city, age from data where age < 22';
 
 // query.value = 'select id, name, age from data where age < 30 order by id desc limit 3';
-query.value = 'select * from data where age <= 21 order by id asc';
+query.value = 'select id, age, name from data where age <= 33 order by id';
 
 const run = () => {
   try {

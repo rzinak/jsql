@@ -28,7 +28,7 @@ export const evaluate = (ast: AST, data: any[]) => {
   }
 
   if (ast.columns[0] === '*') {
-    if (ast.order && ast.order.direction === 'ASC') {
+    if (ast.order && (ast.order.direction === 'ASC' || ast.order.direction === null)) {
       const prop = ast.order.prop;
       result.sort((a, b) => a[prop] - b[prop]);
     } else if (ast.order && ast.order.direction === 'DESC') {
@@ -52,7 +52,7 @@ export const evaluate = (ast: AST, data: any[]) => {
       return newRow;
     });
 
-    if (ast.order && ast.order.direction === 'ASC') {
+    if (ast.order && (ast.order.direction === 'ASC' || ast.order.direction === null)) {
       const prop = ast.order.prop;
       result.sort((a, b) => a[prop] - b[prop]);
     } else if (ast.order && ast.order.direction === 'DESC') {

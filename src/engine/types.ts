@@ -9,7 +9,7 @@ export type Where = {
 export type Order = {
   "type": "OrderSpecification";
   "prop": string;
-  "direction": "ASC" | "DESC";
+  "direction": "ASC" | "DESC" | null;
 }
 
 export type AST = {
