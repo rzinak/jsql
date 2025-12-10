@@ -23,7 +23,8 @@ LIMIT
 ```
 
 ### Logical Operators
-``` AND
+```
+AND
 OR
 ```
 

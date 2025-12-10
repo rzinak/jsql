@@ -1,19 +1,4 @@
-import type { Operator } from "./evaluator";
-import type { Token, TokenType } from "./lexer";
-
-export type Where = {
-  "left": number | string;
-  "operator": Operator;
-  "right": number | string;
-}
-
-export type AST = {
-  "type": "SelectStatement";
-  "columns": string[];
-  "from": string;
-  "where": Where | null;
-  "limit": number | null;
-}
+import type { AST, Operator, Order, Token, TokenType, Where } from "./types";
 
 export const parse = (tokens: Token[]): AST => {
   let current = 0;
@@ -75,6 +60,7 @@ export const parse = (tokens: Token[]): AST => {
   parseColumns();
   consume('KEYWORD', 'FROM');
   const table = consume('IDENTIFIER').value;
+
   let where: Where | null = null;
   if (check('KEYWORD', 'WHERE')) {
     consume('KEYWORD', 'WHERE');
@@ -90,28 +76,69 @@ export const parse = (tokens: Token[]): AST => {
       right
     }
   }
+
+  // TODO: add support for ORDER without providing a direction e.g. ORDER BY id (without passing ASC or DESC)
+  let order: Order | null = null;
+  if (check('KEYWORD', 'ORDER')) {
+    consume('KEYWORD', 'ORDER');
+    if (check('KEYWORD', 'BY')) {
+      consume('KEYWORD', 'BY');
+      const prop = (consume('IDENTIFIER').value);
+      if (check('KEYWORD', 'ASC') || check('KEYWORD', 'DESC')) {
+        const direction = (consume('KEYWORD').value) as "ASC" | "DESC";
+        order = {
+          type: "OrderSpecification",
+          prop,
+          direction
+        }
+      }
+    }
+  }
+
   let limit: number | null = null;
   if (check('KEYWORD', 'LIMIT')) {
     consume('KEYWORD', 'LIMIT');
     limit = Number((consume('NUMBER').value));
-
   }
 
-  console.log({
-    "type": "SelectStatement",
-    "columns": columns,
-    "from": table,
-    where,
-    limit
-  })
+  // console.log({
+  //   "type": "SelectStatement",
+  //   "columns": columns,
+  //   "from": table,
+  //   where,
+  //   order,
+  //   limit
+  // });
 
   return {
     "type": "SelectStatement",
     "columns": columns,
     "from": table,
     where,
+    order,
     limit
   }
+
+  // TODO: also gotta make order to be an array to allow ordering by multiple properties
+  //
+  // "order": [
+  //   {
+  //     "type": "OrderSpecification",
+  //     "by": {
+  //       "type": "ColRef",
+  //       "prop or name": "column_name"
+  //     },
+  //     "direction": "ASC"
+  //   },
+  //   {
+  //     "type": "OrderSpecification",
+  //     "by": {
+  //       "type": "ColRef",
+  //       "prop or name": "column_name"
+  //     },
+  //     "direction": "ASC"
+  //   },
+  // ]
 
   // return {
   //   "type": "SelectStatement",
@@ -123,6 +150,11 @@ export const parse = (tokens: Token[]): AST => {
   //     "operator": ">=",
   //     "right": 18
   //   },
+  //   "order": {
+  //     "type": "OrderSpecification",
+  //     "prop": "id",
+  //     "direction": "ASC" | "DESC" | null
+  //   }
   //   "limit": 1
   // }
 }

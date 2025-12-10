@@ -3,18 +3,7 @@
 //   value: 'SELECT'  // ou 'age', '18', 'Rio', '>=', ','
 // }
 
-export type TokenType =
-  | 'KEYWORD'
-  | 'IDENTIFIER'
-  | 'NUMBER'
-  | 'STRING'
-  | 'OPERATOR'
-  | 'SYMBOL'
-
-export type Token = {
-  type: TokenType;
-  value: string;
-}
+import type { Token } from "./types";
 
 const KEYWORDS = [
   "SELECT",
@@ -25,7 +14,9 @@ const KEYWORDS = [
   "AND",
   "OR",
   "NOT",
-  "LIMIT"
+  "LIMIT",
+  "DESC",
+  "ASC"
 ];
 
 export const tokenize = (query: string): Token[] => {
