@@ -30,7 +30,7 @@ const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boo
     }
 
     return opFunction(leftVal, right);
-  } else if (expression.type === 'Logical') {
+  } else if (expression.type === 'LogicalBinary') {
     // handles the recursive case (LogicalExpression)
     const { operator, left, right } = expression;
 
@@ -43,6 +43,9 @@ const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boo
     }
 
     return logicalFunction(leftResult, rightResult);
+  } else if (expression.type === 'LogicalUnary') {
+    const { operand } = expression;
+    return !evaluateWhereExpression(operand, row);
   }
 
   throw new Error(`Unknown expression type: ${(expression as any).type}`);

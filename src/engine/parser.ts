@@ -1,4 +1,4 @@
-import type { AST, LogicalOperator, Operator, Order, Token, TokenType, WhereExpression } from "./types";
+import type { AST, Operator, Order, Token, TokenType, WhereExpression } from "./types";
 
 export const parse = (tokens: Token[]): AST => {
   let current = 0;
@@ -71,26 +71,42 @@ export const parse = (tokens: Token[]): AST => {
     };
   }
 
-  const parseExpression = (): WhereExpression => {
-    let left = parseComparison();
-    while (check('KEYWORD', 'AND') || check('KEYWORD', 'OR')) {
-      const operator = consume('KEYWORD').value as LogicalOperator;
-      let right = parseExpression();
-      left = {
-        type: 'Logical',
-        operator,
-        left,
-        right
-      }
+  const parseUnary = (): WhereExpression => {
+    if (check('KEYWORD', 'NOT')) {
+      consume('KEYWORD', 'NOT');
+      const operand = parseUnary();
+      return { type: 'LogicalUnary', operator: 'NOT', operand }
     }
+    return parseComparison();
+  }
 
-    return left;
+  // higher precedence than OR
+  const parseAndExpression = (): WhereExpression => {
+    let expression = parseUnary();
+
+    while (check('KEYWORD', 'AND')) {
+      const operator = consume('KEYWORD', 'AND').value as 'AND';
+      const right = parseUnary();
+      expression = { type: 'LogicalBinary', operator, left: expression, right };
+    }
+    return expression;
+  }
+
+  const parseWhereExpression = (): WhereExpression => {
+    let expression = parseAndExpression();
+
+    while (check('KEYWORD', 'OR')) {
+      const operator = consume('KEYWORD', 'OR').value as 'OR';
+      const right = parseAndExpression();
+      expression = { type: "LogicalBinary", operator, left: expression, right };
+    }
+    return expression;
   }
 
   const parseWhere = () => {
     if (check('KEYWORD', 'WHERE')) {
       consume('KEYWORD', 'WHERE');
-      return parseExpression();
+      return parseWhereExpression();
     }
     return null;
   }

@@ -13,7 +13,7 @@ const resultOutput = document.getElementById('result-output') as HTMLPreElement;
 // TODO: add support for the rest of SQL keywords
 
 jsonInput.value = JSON.stringify(INITIAL_DATA, null, 2);
-query.value = 'select id, age, city from data where age < 25 and city = "Brasília"';
+query.value = 'select id, age, city from data where age < 22 and not city = "Santos"';
 
 const run = () => {
   try {
