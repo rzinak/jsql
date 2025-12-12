@@ -1,4 +1,4 @@
-import type { AST, Operator, Order, Token, TokenType, WhereExpression } from "./types";
+import type { AST, LogicalOperator, Operator, Order, Token, TokenType, WhereExpression } from "./types";
 
 export const parse = (tokens: Token[]): AST => {
   let current = 0;
@@ -41,7 +41,6 @@ export const parse = (tokens: Token[]): AST => {
   const parseColumns = () => {
     if (check('SYMBOL', '*')) {
       columns.push(consume('SYMBOL').value);
-      return columns;
     } else {
       columns.push(consume('IDENTIFIER').value);
       while (check('SYMBOL', ',')) {
@@ -49,6 +48,7 @@ export const parse = (tokens: Token[]): AST => {
         columns.push(consume('IDENTIFIER').value);
       }
     }
+    return columns;
   }
 
   const parseFrom = () => {
@@ -56,7 +56,7 @@ export const parse = (tokens: Token[]): AST => {
     return consume('IDENTIFIER').value;
   }
 
-  const parseExpression = (): WhereExpression => {
+  const parseComparison = (): WhereExpression => {
     const left = consume('IDENTIFIER').value;
     const operator = (consume('OPERATOR').value) as Operator;
     const rightToken = consume(tokens[current].type);
@@ -69,6 +69,22 @@ export const parse = (tokens: Token[]): AST => {
       operator,
       right
     };
+  }
+
+  const parseExpression = (): WhereExpression => {
+    let left = parseComparison();
+    while (check('KEYWORD', 'AND') || check('KEYWORD', 'OR')) {
+      const operator = consume('KEYWORD').value as LogicalOperator;
+      let right = parseExpression();
+      left = {
+        type: 'Logical',
+        operator,
+        left,
+        right
+      }
+    }
+
+    return left;
   }
 
   const parseWhere = () => {

@@ -1,8 +1,3 @@
-// {
-//   type: 'KEYWORD', // ou 'IDENTIFIER', 'NUMBER', 'STRING', 'OPERATOR', 'SYMBOL'
-//   value: 'SELECT'  // ou 'age', '18', 'Rio', '>=', ','
-// }
-
 import type { Token } from "./types";
 
 const KEYWORDS = [
@@ -122,7 +117,3 @@ export const tokenize = (query: string): Token[] => {
 
   return tokens;
 }
-
-// const query = 'SELECT name, age FROM users WHERE age >= 18';
-// const t = tokenize(query);
-// console.log(t);

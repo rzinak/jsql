@@ -72,8 +72,6 @@ const applyOrdering = (result: DataRow[], orders: Order[] | null): DataRow[] => 
 }
 
 export const evaluate = (ast: AST, data: any[]) => {
-  console.log('ast:', ast);
-
   let result = data;
 
   if (ast.where) {
