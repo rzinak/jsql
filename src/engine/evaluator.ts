@@ -1,6 +1,8 @@
-import type { AST, Operator } from "./types";
+import type { AST, LogicalOperator, Operator, Order, WhereExpression } from "./types";
 
-const operations: Record<Operator, (a: number | string, b: number | string) => boolean> = {
+export type DataRow = Record<string, any>;
+
+const operators: Record<Operator, (a: number | string, b: number | string) => boolean> = {
   '>': (a, b) => a > b,
   '<': (a, b) => a < b,
   '=': (a, b) => a === b,
@@ -9,61 +11,92 @@ const operations: Record<Operator, (a: number | string, b: number | string) => b
   '<=': (a, b) => a <= b,
 }
 
+const logicalOperators: Record<LogicalOperator, (a: boolean, b: boolean) => boolean> = {
+  'AND': (a, b) => a && b,
+  'OR': (a, b) => a || b,
+  'NOT': (a, _b) => !a
+}
+
+const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boolean => {
+  if (expression.type === 'Comparison') {
+    // handles the base case (ComparisonExpression)
+    const { left, operator, right } = expression;
+
+    const leftVal = row[left];
+    const opFunction = operators[operator];
+
+    if (!opFunction) {
+      throw new Error(`Unknown operator: ${operator}`);
+    }
+
+    return opFunction(leftVal, right);
+  } else if (expression.type === 'Logical') {
+    // handles the recursive case (LogicalExpression)
+    const { operator, left, right } = expression;
+
+    const leftResult: boolean = evaluateWhereExpression(left, row);
+    const rightResult: boolean = evaluateWhereExpression(right, row);
+    const logicalFunction = logicalOperators[operator];
+
+    if (!logicalFunction) {
+      throw new Error(`Unknown logical operator: ${operator}`);
+    }
+
+    return logicalFunction(leftResult, rightResult);
+  }
+
+  throw new Error(`Unknown expression type: ${(expression as any).type}`);
+}
+
+const applyOrdering = (result: DataRow[], orders: Order[] | null): DataRow[] => {
+  if (!orders || orders.length === 0) {
+    return result;
+  }
+
+  result.sort((a, b) => {
+    for (const order of orders) {
+      const prop = order.prop;
+      const direction = order.direction;
+
+      const valA = a[prop];
+      const valB = b[prop];
+
+      if (valA < valB) return direction === 'ASC' ? -1 : 1;
+      if (valA > valB) return direction === 'ASC' ? 1 : -1;
+    }
+
+    return 0;
+  });
+
+  return result;
+}
+
 export const evaluate = (ast: AST, data: any[]) => {
+  console.log('ast:', ast);
+
   let result = data;
 
   if (ast.where) {
-    const where = ast.where;
-    const opFunc = operations[where.operator];
-
-    if (!opFunc) {
-      throw new Error(`unknown operator: ${where.operator}`);
-    }
-
-    result = result.filter((row) => {
-      const leftVal = row[where.left];
-      const rightVal = where.right;
-      return opFunc(leftVal, rightVal);
-    });
+    result = result.filter((row) => evaluateWhereExpression(ast.where!, row));
   }
 
-  if (ast.columns[0] === '*') {
-    if (ast.order && (ast.order.direction === 'ASC' || ast.order.direction === null)) {
-      const prop = ast.order.prop;
-      result.sort((a, b) => a[prop] - b[prop]);
-    } else if (ast.order && ast.order.direction === 'DESC') {
-      const prop = ast.order.prop;
-      result.sort((a, b) => b[prop] - a[prop]);
-    }
+  result = applyOrdering(result, ast.order);
 
-    if (ast.limit) {
-      return result.slice(0, ast.limit);
-    } else {
-      return result;
-    }
-  } else {
+  if (!(ast.select.length === 1 && ast.select[0] === '*')) {
     result = result.map((row) => {
-      const newRow: any = {}
-      ast.columns.forEach((col) => {
+      const newRow: any = {};
+      ast.select.forEach((col) => {
         if (row.hasOwnProperty(col)) {
           newRow[col] = row[col];
         }
       });
       return newRow;
     });
-
-    if (ast.order && (ast.order.direction === 'ASC' || ast.order.direction === null)) {
-      const prop = ast.order.prop;
-      result.sort((a, b) => a[prop] - b[prop]);
-    } else if (ast.order && ast.order.direction === 'DESC') {
-      const prop = ast.order.prop;
-      result.sort((a, b) => b[prop] - a[prop]);
-    }
-
-    if (ast.limit) {
-      return result.slice(0, ast.limit);
-    } else {
-      return result;
-    }
   }
+
+  if (ast.limit) {
+    result = result.slice(0, ast.limit);
+  }
+
+  return result
 }
