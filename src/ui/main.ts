@@ -1,7 +1,7 @@
 import { evaluate } from "../engine/evaluator.ts";
 import { tokenize } from "../engine/lexer.ts";
 import { parse } from "../engine/parser.ts";
-import { INITIAL_DATA } from "../utils/data.ts";
+import { NESTED_INITIAL_DATA } from "../utils/data.ts";
 
 const query = document.getElementById('query-input') as HTMLInputElement;
 const runBtn = document.getElementById('run-btn') as HTMLButtonElement;
@@ -10,10 +10,9 @@ const clearOutputBtn = document.getElementById('clear-output-btn') as HTMLButton
 const jsonInput = document.getElementById('json-input') as HTMLTextAreaElement;
 const resultOutput = document.getElementById('result-output') as HTMLPreElement;
 
-// TODO: add support for the rest of SQL keywords
-
-jsonInput.value = JSON.stringify(INITIAL_DATA, null, 2);
-query.value = 'select id, age, city from data where age < 22 and not city = "Santos"';
+jsonInput.value = JSON.stringify(NESTED_INITIAL_DATA, null, 2);
+// query.value = 'select id, age, city, meta from data where meta.views = 100';
+query.value = 'select id, age, city, preferences from data where preferences.notifications.sms = false';
 
 const run = () => {
   try {

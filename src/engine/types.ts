@@ -8,7 +8,7 @@ export type ComparisonExpression = {
   "type": "Comparison";
   "left": string; // should be a column name/identifier
   "operator": Operator;
-  "right": number | string;
+  "right": number | string | boolean;
 }
 
 // a logical expression is AND city = "RJ", for example

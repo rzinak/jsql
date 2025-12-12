@@ -1,4 +1,4 @@
-export const INITIAL_DATA = [
+export const FLAT_INITIAL_DATA = [
   { "id": 1, "name": "Alice", "age": 25, "city": "Rio" },
   { "id": 2, "name": "Bob", "age": 17, "city": "SP" },
   { "id": 3, "name": "Charlie", "age": 30, "city": "BH" },
@@ -49,4 +49,365 @@ export const INITIAL_DATA = [
   { "id": 48, "name": "Vera", "age": 27, "city": "Divinópolis" },
   { "id": 49, "name": "Wade", "age": 35, "city": "Porto Velho" },
   { "id": 50, "name": "Xena", "age": 22, "city": "Londrina" }
+]
+
+export const NESTED_INITIAL_DATA = [
+  {
+    "id": 1,
+    "name": "Alice",
+    "age": 25,
+    "city": "Rio",
+    "meta": {
+      "views": 100,
+      "created_at": "2023-01-01",
+      "updated_at": "2023-05-12"
+    },
+    "address": {
+      "street": "Av. Atlântica",
+      "number": 123,
+      "zip_code": "22021-060",
+      "country": "Brasil"
+    },
+    "preferences": {
+      "color": "blue",
+      "language": "pt-BR",
+      "notifications": {
+        "email": true,
+        "sms": false
+      }
+    }
+  },
+  {
+    "id": 2,
+    "name": "Bob",
+    "age": 17,
+    "city": "SP",
+    "meta": {
+      "views": 50,
+      "created_at": "2022-08-10",
+      "updated_at": "2023-06-15"
+    },
+    "address": {
+      "street": "Rua 25 de Março",
+      "number": 450,
+      "zip_code": "01023-001",
+      "country": "Brasil"
+    },
+    "preferences": {
+      "color": "green",
+      "language": "en",
+      "notifications": {
+        "email": false,
+        "sms": true
+      }
+    }
+  },
+  {
+    "id": 3,
+    "name": "Charlie",
+    "age": 30,
+    "city": "BH",
+    "meta": {
+      "views": 200,
+      "created_at": "2021-05-20",
+      "updated_at": "2023-01-25"
+    },
+    "address": {
+      "street": "Rua dos Três Irmãos",
+      "number": 987,
+      "zip_code": "30130-080",
+      "country": "Brasil"
+    },
+    "preferences": {
+      "color": "red",
+      "language": "pt-BR",
+      "notifications": {
+        "email": true,
+        "sms": true
+      }
+    }
+  },
+  {
+    "id": 4,
+    "name": "David",
+    "age": 40,
+    "city": "Salvador",
+    "meta": {
+      "views": 150,
+      "created_at": "2020-11-11",
+      "updated_at": "2023-03-22"
+    },
+    "address": {
+      "street": "Rua do Comércio",
+      "number": 789,
+      "zip_code": "40010-100",
+      "country": "Brasil"
+    },
+    "preferences": {
+      "color": "yellow",
+      "language": "pt-BR",
+      "notifications": {
+        "email": true,
+        "sms": false
+      }
+    }
+  },
+  {
+    "id": 5,
+    "name": "Eve",
+    "age": 22,
+    "city": "Brasília",
+    "meta": {
+      "views": 90,
+      "created_at": "2022-02-14",
+      "updated_at": "2023-07-30"
+    },
+    "address": {
+      "street": "Eixo Monumental",
+      "number": 456,
+      "zip_code": "70040-000",
+      "country": "Brasil"
+    },
+    "preferences": {
+      "color": "purple",
+      "language": "en",
+      "notifications": {
+        "email": false,
+        "sms": true
+      }
+    }
+  },
+  {
+    "id": 6,
+    "name": "Frank",
+    "age": 35,
+    "city": "Manaus",
+    "meta": {
+      "views": 120,
+      "created_at": "2021-04-12",
+      "updated_at": "2023-09-01"
+    },
+    "address": {
+      "street": "Rua do Rio Negro",
+      "number": 203,
+      "zip_code": "69000-000",
+      "country": "Brasil"
+    },
+    "preferences": {
+      "color": "orange",
+      "language": "pt-BR",
+      "notifications": {
+        "email": true,
+        "sms": true
+      }
+    },
+    "social": {
+      "facebook": "frank123",
+      "twitter": "@frank_manaus",
+      "instagram": "frank.manaus"
+    }
+  },
+  {
+    "id": 7,
+    "name": "Grace",
+    "age": 29,
+    "city": "Fortaleza",
+    "meta": {
+      "views": 175,
+      "created_at": "2020-09-05",
+      "updated_at": "2023-11-21"
+    },
+    "address": {
+      "street": "Avenida Beira Mar",
+      "number": 1500,
+      "zip_code": "60165-000",
+      "country": "Brasil"
+    },
+    "preferences": {
+      "color": "teal",
+      "language": "es",
+      "notifications": {
+        "email": true,
+        "sms": false
+      }
+    },
+    "social": {
+      "facebook": "grace_fortaleza",
+      "twitter": "@gracefortaleza"
+    }
+  },
+  {
+    "id": 8,
+    "name": "Hank",
+    "age": 28,
+    "city": "Recife",
+    "meta": {
+      "views": 140,
+      "created_at": "2019-12-01",
+      "updated_at": "2023-10-15"
+    },
+    "address": {
+      "street": "Rua do Sol",
+      "number": 800,
+      "zip_code": "50000-100",
+      "country": "Brasil"
+    },
+    "preferences": {
+      "color": "pink",
+      "language": "en",
+      "notifications": {
+        "email": false,
+        "sms": true
+      }
+    },
+    "social": {
+      "facebook": "hank_recife",
+      "instagram": "hank_recife"
+    }
+  },
+  {
+    "id": 9,
+    "name": "Ivy",
+    "age": 24,
+    "city": "Curitiba",
+    "meta": {
+      "views": 80,
+      "created_at": "2021-07-10",
+      "updated_at": "2023-08-30"
+    },
+    "address": {
+      "street": "Rua XV de Novembro",
+      "number": 550,
+      "zip_code": "80020-310",
+      "country": "Brasil"
+    },
+    "preferences": {
+      "color": "violet",
+      "language": "pt-BR",
+      "notifications": {
+        "email": true,
+        "sms": false
+      }
+    },
+    "social": {
+      "facebook": "ivycuritiba",
+      "twitter": "@ivycuritiba"
+    }
+  },
+  {
+    "id": 10,
+    "name": "Jack",
+    "age": 26,
+    "city": "Porto Alegre",
+    "meta": {
+      "views": 95,
+      "created_at": "2022-01-15",
+      "updated_at": "2023-12-01"
+    },
+    "address": {
+      "street": "Rua dos Andradas",
+      "number": 420,
+      "zip_code": "90010-190",
+      "country": "Brasil"
+    },
+    "preferences": {
+      "color": "gray",
+      "language": "pt-BR",
+      "notifications": {
+        "email": false,
+        "sms": true
+      }
+    },
+    "social": {
+      "instagram": "jack_poa",
+      "facebook": "jack_portoalegre"
+    }
+  },
+  {
+    "id": 11,
+    "name": "Katie",
+    "age": 32,
+    "city": "Belo Horizonte",
+    "meta": {
+      "views": 250,
+      "created_at": "2018-10-05",
+      "updated_at": "2023-06-10"
+    },
+    "address": {
+      "street": "Avenida Afonso Pena",
+      "number": 1070,
+      "zip_code": "30130-003",
+      "country": "Brasil"
+    },
+    "preferences": {
+      "color": "blue",
+      "language": "pt-BR",
+      "notifications": {
+        "email": true,
+        "sms": true
+      }
+    },
+    "social": {
+      "facebook": "katie_bh",
+      "twitter": "@katiebh"
+    }
+  },
+  {
+    "id": 12,
+    "name": "Leo",
+    "age": 33,
+    "city": "São Paulo",
+    "meta": {
+      "views": 200,
+      "created_at": "2019-03-13",
+      "updated_at": "2023-04-27"
+    },
+    "address": {
+      "street": "Rua dos Três Irmãos",
+      "number": 400,
+      "zip_code": "01310-020",
+      "country": "Brasil"
+    },
+    "preferences": {
+      "color": "black",
+      "language": "en",
+      "notifications": {
+        "email": false,
+        "sms": true
+      }
+    },
+    "social": {
+      "instagram": "leo_sampa",
+      "facebook": "leo.sp"
+    }
+  },
+  {
+    "id": 13,
+    "name": "Mia",
+    "age": 21,
+    "city": "Florianópolis",
+    "meta": {
+      "views": 90,
+      "created_at": "2021-11-01",
+      "updated_at": "2023-07-12"
+    },
+    "address": {
+      "street": "Rua João Pinto",
+      "number": 320,
+      "zip_code": "88015-210",
+      "country": "Brasil"
+    },
+    "preferences": {
+      "color": "white",
+      "language": "pt-BR",
+      "notifications": {
+        "email": true,
+        "sms": true
+      }
+    },
+    "social": {
+      "facebook": "mia_floripa",
+      "twitter": "@mia_floripa"
+    }
+  }
 ]

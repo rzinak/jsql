@@ -6,6 +6,7 @@ SELECT name, age, city FROM users
 SELECT name, age FROM users WHERE age > 18
 SELECT name, email, age FROM users WHERE age >= 18 AND city = "Rio de Janeiro"
 SELECT name, age FROM users WHERE age > 18 ORDER BY age DESC
+SELECT name, age from USERS WHERE age > 18 AND NOT city = "Rio de Janeiro" ORDER BY id DESC LIMIT 1
 ```
 
 ---
@@ -26,6 +27,7 @@ LIMIT
 ```
 AND
 OR
+NOT
 ```
 
 ### Direction Keywords

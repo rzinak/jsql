@@ -2,7 +2,7 @@ import type { AST, LogicalOperator, Operator, Order, WhereExpression } from "./t
 
 export type DataRow = Record<string, any>;
 
-const operators: Record<Operator, (a: number | string, b: number | string) => boolean> = {
+const operators: Record<Operator, (a: number | string | boolean, b: number | string | boolean) => boolean> = {
   '>': (a, b) => a > b,
   '<': (a, b) => a < b,
   '=': (a, b) => a === b,
@@ -17,12 +17,16 @@ const logicalOperators: Record<LogicalOperator, (a: boolean, b: boolean) => bool
   'NOT': (a, _b) => !a
 }
 
+const resolvePath = (obj: any, path: string): number | string => {
+  return path.split('.').reduce((acc, part) => {
+    return acc && acc[part];
+  }, obj);
+}
+
 const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boolean => {
   if (expression.type === 'Comparison') {
-    // handles the base case (ComparisonExpression)
     const { left, operator, right } = expression;
-
-    const leftVal = row[left];
+    const leftVal = resolvePath(row, left);
     const opFunction = operators[operator];
 
     if (!opFunction) {
@@ -83,6 +87,10 @@ export const evaluate = (ast: AST, data: any[]) => {
 
   result = applyOrdering(result, ast.order);
 
+  if (ast.limit) {
+    result = result.slice(0, ast.limit);
+  }
+
   if (!(ast.select.length === 1 && ast.select[0] === '*')) {
     result = result.map((row) => {
       const newRow: any = {};
@@ -93,10 +101,6 @@ export const evaluate = (ast: AST, data: any[]) => {
       });
       return newRow;
     });
-  }
-
-  if (ast.limit) {
-    result = result.slice(0, ast.limit);
   }
 
   return result

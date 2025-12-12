@@ -59,10 +59,30 @@ export const parse = (tokens: Token[]): AST => {
   const parseComparison = (): WhereExpression => {
     const left = consume('IDENTIFIER').value;
     const operator = (consume('OPERATOR').value) as Operator;
-    const rightToken = consume(tokens[current].type);
-    const right = rightToken.type === 'NUMBER'
-      ? Number(rightToken.value)
-      : rightToken.value;
+    const rightToken = peek();
+
+    let right: string | number | boolean | null;
+
+    if (rightToken.type === 'NUMBER') {
+      right = consume('NUMBER').value;
+    } else if (rightToken.type === 'STRING') {
+      right = consume('STRING').value;
+    } else if (rightToken.type === 'KEYWORD' || rightToken.type === 'IDENTIFIER') {
+      const val = rightToken.value.toLowerCase();
+
+      if (val === 'true') {
+        consume(rightToken.type);
+        right = true;
+      } else if (val === 'false') {
+        consume(rightToken.type);
+        right = false;
+      } else {
+        right = consume(rightToken.type).value;
+      }
+    } else {
+      right = consume(rightToken.type).value;
+    }
+
     return {
       type: "Comparison",
       left,

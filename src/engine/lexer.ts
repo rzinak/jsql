@@ -23,7 +23,9 @@ export const tokenize = (query: string): Token[] => {
 
   const isDigit = (char: string): boolean => /\d/.test(char);
 
-  const isLetter = (char: string): boolean => /^[a-z_]$/i.test(char);
+  // NOTE: for now i just allow dots in the identifier
+  // TODO: update the parser to consume IDENTIFIER -> DOT -> IDENTIFIER (recursively?)
+  const isLetter = (char: string): boolean => /^[a-z_.]$/i.test(char);
 
   // @ts-ignore
   const peek = (): Token => tokens[current];
