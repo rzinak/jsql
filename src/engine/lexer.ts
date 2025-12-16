@@ -11,7 +11,7 @@ const KEYWORDS = [
   "NOT",
   "LIMIT",
   "DESC",
-  "ASC"
+  "ASC",
 ];
 
 export const tokenize = (query: string): Token[] => {
@@ -98,6 +98,8 @@ export const tokenize = (query: string): Token[] => {
       }
       if (KEYWORDS.includes(val.toUpperCase())) {
         tokens.push({ type: 'KEYWORD', value: val.toUpperCase() });
+      } else if (val.toUpperCase() === 'LIKE') {
+        tokens.push({ type: 'OPERATOR', value: val });
       } else {
         tokens.push({ type: 'IDENTIFIER', value: val });
       }

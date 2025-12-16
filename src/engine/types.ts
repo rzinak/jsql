@@ -1,4 +1,4 @@
-export type Operator = '>' | '<' | '=' | '!=' | '>=' | '<=';
+export type Operator = '>' | '<' | '=' | '!=' | '>=' | '<=' | 'LIKE';
 
 export type LogicalOperator = 'AND' | 'OR' | 'NOT';
 

@@ -9,6 +9,14 @@ const operators: Record<Operator, (a: number | string | boolean, b: number | str
   '!=': (a, b) => a !== b,
   '>=': (a, b) => a >= b,
   '<=': (a, b) => a <= b,
+  'LIKE': (a, b) => {
+    const regexBody = String(b)
+      .replace(/[.*?^${}()|[\]\\]/g, '\\%&')
+      .replace(/%/g, '.*')
+      .replace(/_/g, '.');
+    const regex = new RegExp(`${regexBody}$`, 'i');
+    return regex.test(String(a));
+  }
 }
 
 const logicalOperators: Record<LogicalOperator, (a: boolean, b: boolean) => boolean> = {
