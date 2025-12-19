@@ -14,7 +14,7 @@ const operators: Record<Operator, (a: number | string | boolean, b: number | str
       .replace(/[.*?^${}()|[\]\\]/g, '\\%&')
       .replace(/%/g, '.*')
       .replace(/_/g, '.');
-    const regex = new RegExp(`${regexBody}$`, 'i');
+    const regex = new RegExp(`^${regexBody}$`, 'i');
     return regex.test(String(a));
   }
 }

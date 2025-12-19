@@ -3,6 +3,8 @@
 // SELECT name, preferences.language FROM users WHERE preferences.language LIKE "pt%"
 // i'll receive only the name, and not preferences.language
 
+// TODO: add a 'copy' button, to copy all text from either the input or output panels
+
 import { evaluate } from "../engine/evaluator.ts";
 import { tokenize } from "../engine/lexer.ts";
 import { parse } from "../engine/parser.ts";
