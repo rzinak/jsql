@@ -124,10 +124,8 @@ export const evaluate = (ast: AST, data: any[]) => {
       ast.select.forEach((col) => {
         const objValue = resolvePath(row, col);
         const obj = buildObj(col, objValue);
-        if (col.includes('.')) {
-          if (row.hasOwnProperty(Object.keys(obj))) {
-            newRow[Object.keys(obj)[0]] = Object.values(obj)[0];
-          }
+        if (col.includes('.') && row.hasOwnProperty(Object.keys(obj))) {
+          newRow[Object.keys(obj)[0]] = Object.values(obj)[0];
         } else if (row.hasOwnProperty(col)) {
           newRow[col] = row[col];
         }

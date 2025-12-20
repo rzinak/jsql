@@ -7,7 +7,9 @@ import { NESTED_INITIAL_DATA } from "../utils/data.ts";
 
 const query = document.getElementById('query-input') as HTMLInputElement;
 const runBtn = document.getElementById('run-btn') as HTMLButtonElement;
+const copyInputBtn = document.getElementById('copy-input-btn') as HTMLButtonElement;
 const clearInputBtn = document.getElementById('clear-input-btn') as HTMLButtonElement;
+const copyOutputBtn = document.getElementById('copy-output-btn') as HTMLButtonElement;
 const clearOutputBtn = document.getElementById('clear-output-btn') as HTMLButtonElement;
 const jsonInput = document.getElementById('json-input') as HTMLTextAreaElement;
 const resultOutput = document.getElementById('result-output') as HTMLPreElement;
@@ -35,7 +37,15 @@ const run = () => {
   }
 }
 
-run();
+const copyToClipboard = async (text: string): Promise<void> => {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (err) {
+    console.error('Faiiled to copy text:', err);
+  }
+}
+
+copyInputBtn.addEventListener('click', () => copyToClipboard(jsonInput.value));
 
 clearInputBtn.addEventListener('click', () => {
   try {
@@ -45,6 +55,8 @@ clearInputBtn.addEventListener('click', () => {
     jsonInput.value = err.message;
   }
 });
+
+copyOutputBtn.addEventListener('click', () => copyToClipboard(resultOutput.textContent));
 
 clearOutputBtn.addEventListener('click', () => {
   try {
