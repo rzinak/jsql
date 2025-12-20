@@ -86,6 +86,25 @@ const applyOrdering = (result: DataRow[], orders: Order[] | null): DataRow[] => 
   return result;
 }
 
+const buildObj = (path: string, value: any, obj: any = {}) => {
+  const keys = path.split('.');
+  let current: any = obj;
+
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+
+    if (i === keys.length - 1) {
+      current[key] = value;
+    } else {
+      if (!current[key] || typeof current[key] !== 'object') {
+        current[key] = {};
+      }
+      current = current[key];
+    }
+  }
+  return obj;
+}
+
 export const evaluate = (ast: AST, data: any[]) => {
   let result = data;
 
@@ -103,13 +122,18 @@ export const evaluate = (ast: AST, data: any[]) => {
     result = result.map((row) => {
       const newRow: any = {};
       ast.select.forEach((col) => {
-        if (row.hasOwnProperty(col)) {
+        const objValue = resolvePath(row, col);
+        const obj = buildObj(col, objValue);
+        if (col.includes('.')) {
+          if (row.hasOwnProperty(Object.keys(obj))) {
+            newRow[Object.keys(obj)[0]] = Object.values(obj)[0];
+          }
+        } else if (row.hasOwnProperty(col)) {
           newRow[col] = row[col];
         }
       });
       return newRow;
     });
   }
-
   return result
 }

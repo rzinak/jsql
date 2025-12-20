@@ -1,8 +1,3 @@
-// FIX: selecting object properties is not working
-// for example, if i use this query:
-// SELECT name, preferences.language FROM users WHERE preferences.language LIKE "pt%"
-// i'll receive only the name, and not preferences.language
-
 // TODO: add a 'copy' button, to copy all text from either the input or output panels
 
 import { evaluate } from "../engine/evaluator.ts";
@@ -21,7 +16,9 @@ jsonInput.value = JSON.stringify(NESTED_INITIAL_DATA, null, 2);
 // query.value = 'select id, age, city, meta from data where meta.views = 100';
 // query.value = 'select id, age, city, preferences from data where preferences.notifications.sms = false';
 // query.value = 'select id, age, city, address from data where LIKE "rua%"';
-query.value = 'select id, age, city, address from data where address.street LIKE "rua%"';
+// query.value = 'select id, age, city, address from data where address.street LIKE "rua%"';
+// query.value = 'SELECT name, preferences.language FROM users WHERE preferences.language LIKE "pt%"';
+query.value = 'SELECT preferences.language FROM users WHERE preferences.language LIKE "pt%"';
 
 const run = () => {
   try {
@@ -37,6 +34,8 @@ const run = () => {
     resultOutput.textContent = err.message;
   }
 }
+
+run();
 
 clearInputBtn.addEventListener('click', () => {
   try {
