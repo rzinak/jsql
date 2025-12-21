@@ -6,7 +6,6 @@ export const parse = (tokens: Token[]): AST => {
 
   const peek = (): Token => tokens[current];
 
-  // @ts-ignore
   const isAtEnd = (): boolean => current >= tokens.length;
 
   // check current token type, but dont consume
@@ -17,15 +16,6 @@ export const parse = (tokens: Token[]): AST => {
     return token.type === type;
   }
 
-  // @ts-ignore
-  const advance = () => {
-    if (!isAtEnd()) {
-      current++;
-    }
-    return tokens[current - 1];
-  }
-
-  // @ts-ignore
   const consume = (type: TokenType, expectedValue?: string) => {
     if (check(type, expectedValue)) {
       return tokens[current++];
@@ -64,7 +54,7 @@ export const parse = (tokens: Token[]): AST => {
     let right: string | number | boolean | null;
 
     if (rightToken.type === 'NUMBER') {
-      right = consume('NUMBER').value;
+      right = Number(consume('NUMBER').value);
     } else if (rightToken.type === 'STRING') {
       right = consume('STRING').value;
     } else if (rightToken.type === 'KEYWORD' || rightToken.type === 'IDENTIFIER') {

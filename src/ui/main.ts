@@ -15,7 +15,7 @@ const selectElement = document.getElementById('table-selector') as HTMLSelectEle
 const addTableBtn = document.getElementById('add-table-btn') as HTMLButtonElement;
 const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
 
-query.value = 'SELECT name, preferences.language, address FROM users WHERE preferences.language LIKE "pt%"';
+query.value = 'SELECT * from example_flat where age = 25';
 
 const STORAGE_KEY = 'jsql_database';
 const TABLE_KEY = 'jsq_current_table';
