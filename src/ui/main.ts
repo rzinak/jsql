@@ -80,19 +80,35 @@ selectElement.addEventListener('change', (event) => {
 });
 
 const addTable = (newTableName: string | null) => {
-  if (!newTableName) return;
-  const validatedName = /^[a-zA-Z0-9]+$/.test(newTableName) && newTableName.length > 0 && !(/\s/.test(newTableName));
-  if (validatedName && !database.hasOwnProperty(newTableName)) {
+  try {
+    resultOutput.classList.remove('error');
+    resultOutput.textContent = '';
+
+    if (!newTableName || newTableName.trim() === '') {
+      throw new Error('Table name cannot be empty');
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(newTableName)) {
+      throw new Error('Table name can only contain letters, numbers and underscores');
+    }
+
+    if (database.hasOwnProperty(newTableName)) {
+      throw new Error(`Table ${newTableName} already exists`);
+    }
+
     database[newTableName] = [];
     populateSelect(database);
     changeTable(newTableName);
     selectElement.value = newTableName;
     saveState();
+  } catch (err: any) {
+    resultOutput.classList.add('error');
+    resultOutput.textContent = err.message;
   }
 }
 
 addTableBtn.addEventListener('click', () => {
-  addTable(window.prompt('Name of the table:'));
+  addTable(window.prompt('Table name:'));
 });
 
 const run = () => {
