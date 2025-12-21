@@ -129,6 +129,37 @@ button:hover {
   box-shadow: none;
 }
 
+.data-source>button {
+  background: var(--bg);
+  color: #5b6978;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.25rem .75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: all .25s ease-in-out;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.data-source>button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.data-source>button:hover {
+  background: #1f242b;
+}
+
+.data-source>button:nth-of-type(1) {
+  right: 8.5rem;
+}
+
+.data-source>button:nth-of-type(2) {
+  right: 1.5rem;
+}
+
 .input-header>button {
   position: absolute;
   top: 2.5rem;
@@ -224,10 +255,38 @@ textarea:focus {
   outline: 1px solid var(--blue);
 }
 
-footer>small>a {
+footer {
+  display: flex;
+  justify-content: space-between;
+}
+
+footer>.footer-left>small>a {
   text-decoration: none;
   font-size: 0.8rem;
   color: #8b949e;
+}
+
+footer>.footer-right>button {
+  background: var(--bg);
+  color: #5b6978;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.25rem .75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: all .25s ease-in-out;
+  opacity: 0;
+  pointer-events: none
+}
+
+footer>.footer-right>button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+footer>.footer-right>button:hover {
+  background: #1f242b;
 }
 
 .error {

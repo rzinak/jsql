@@ -1,14 +1,7 @@
-// TODO: let the user create data sources -- tables --, i already added a select there in the 'input json' section.
-// i could start with some in-memory data, so it wont start empty;
-// no need for a modal now, window.prompt is enough for now;
-// one thing i should keep in mind is during the 'context switch', as i would need to save the current data inside
-// the in-memory storage, should not allow the user to change the data source if there's something wrong;
-// need a global state for the current data source;
-
 import { evaluate } from "../engine/evaluator.ts";
 import { tokenize } from "../engine/lexer.ts";
 import { parse } from "../engine/parser.ts";
-import { NESTED_INITIAL_DATA } from "../utils/data.ts";
+import { FLAT_INITIAL_DATA, NESTED_INITIAL_DATA } from "../utils/data.ts";
 
 const query = document.getElementById('query-input') as HTMLInputElement;
 const runBtn = document.getElementById('run-btn') as HTMLButtonElement;
@@ -18,14 +11,89 @@ const copyOutputBtn = document.getElementById('copy-output-btn') as HTMLButtonEl
 const clearOutputBtn = document.getElementById('clear-output-btn') as HTMLButtonElement;
 const jsonInput = document.getElementById('json-input') as HTMLTextAreaElement;
 const resultOutput = document.getElementById('result-output') as HTMLPreElement;
+const selectElement = document.getElementById('table-selector') as HTMLSelectElement;
+const addTableBtn = document.getElementById('add-table-btn') as HTMLButtonElement;
+const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
 
-jsonInput.value = JSON.stringify(NESTED_INITIAL_DATA, null, 2);
-// query.value = 'select id, age, city, meta from data where meta.views = 100';
-// query.value = 'select id, age, city, preferences from data where preferences.notifications.sms = false';
-// query.value = 'select id, age, city, address from data where LIKE "rua%"';
-// query.value = 'select id, age, city, address from data where address.street LIKE "rua%"';
-// query.value = 'SELECT name, preferences.language FROM users WHERE preferences.language LIKE "pt%"';
 query.value = 'SELECT name, preferences.language, address FROM users WHERE preferences.language LIKE "pt%"';
+
+const STORAGE_KEY = 'jsql_database';
+const TABLE_KEY = 'jsq_current_table';
+
+const SEED_DATA = {
+  "example_nested": NESTED_INITIAL_DATA,
+  "example_flat": FLAT_INITIAL_DATA,
+}
+
+const storedData = localStorage.getItem(STORAGE_KEY);
+const storedTable = localStorage.getItem(TABLE_KEY);
+
+const database: Record<string, any[]> = storedData ? JSON.parse(storedData) : SEED_DATA;
+
+let currentTable: string = storedTable || Object.keys(database)[0];
+
+const saveState = () => {
+  try {
+    const currentJson = JSON.parse(jsonInput.value);
+    database[currentTable] = currentJson;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(database));
+    localStorage.setItem(TABLE_KEY, currentTable);
+  } catch (err) {
+    console.warn('Invalid input json... Ignoring automatic save');
+  }
+}
+
+const populateSelect = (obj: Record<string, any[]>) => {
+  while (selectElement.options.length) selectElement.options.remove(0);
+  const keys = Object.keys(obj);
+  keys.forEach(key => {
+    const option = document.createElement('option');
+    option.value = key;
+    option.textContent = key;
+    selectElement?.append(option);
+  });
+  if (storedTable) {
+    selectElement.value = currentTable;
+  }
+}
+
+populateSelect(database);
+
+jsonInput.value = JSON.stringify(database[currentTable], null, 2);
+
+const changeTable = (table: string) => {
+  try {
+    const parsedData = JSON.parse(jsonInput.value);
+    database[currentTable] = parsedData;
+    currentTable = table;
+    jsonInput.value = JSON.stringify(database[currentTable], null, 2);
+    saveState();
+  } catch (err: any) {
+    resultOutput.classList.add('error');
+    resultOutput.textContent = err.message;
+  }
+}
+
+selectElement.addEventListener('change', (event) => {
+  const selectedValue = (event.target as HTMLSelectElement).value;
+  changeTable(selectedValue);
+});
+
+const addTable = (newTableName: string | null) => {
+  if (!newTableName) return;
+  const validatedName = /^[a-zA-Z0-9]+$/.test(newTableName) && newTableName.length > 0 && !(/\s/.test(newTableName));
+  if (validatedName && !database.hasOwnProperty(newTableName)) {
+    database[newTableName] = [];
+    populateSelect(database);
+    changeTable(newTableName);
+    selectElement.value = newTableName;
+    saveState();
+  }
+}
+
+addTableBtn.addEventListener('click', () => {
+  addTable(window.prompt('Name of the table:'));
+});
 
 const run = () => {
   try {
@@ -33,9 +101,13 @@ const run = () => {
     resultOutput.textContent = '';
     const tokens = tokenize(query.value);
     const parsed = parse(tokens);
+    if (parsed.from !== currentTable) {
+      throw new Error(`Table '${parsed.from}' not found. Did you mean '${currentTable}'?`);
+    }
     const parsedInputJson = JSON.parse(jsonInput.value);
     const evaluated = evaluate(parsed, parsedInputJson);
     resultOutput.textContent = JSON.stringify(evaluated, null, 2);
+    saveState();
   } catch (err: any) {
     resultOutput.classList.add('error');
     resultOutput.textContent = err.message;
@@ -78,5 +150,15 @@ query?.addEventListener('keydown', (event) => {
   if (event.ctrlKey && event.key === 'Enter') {
     event.preventDefault();
     run();
+  }
+});
+
+jsonInput.addEventListener('blur', saveState);
+
+resetBtn.addEventListener('click', () => {
+  if (confirm('Do you really want to delete all created tables and revert to the default ones?')) {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(TABLE_KEY);
+    window.location.reload();
   }
 });

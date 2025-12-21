@@ -25,8 +25,8 @@
           <div class="data-source">
             <label for="table-selector">Data source:</label>
             <select name="table-selector" id="table-selector">
-              <option value="data">data</option>
             </select>
+            <button id="add-table-btn" title="Create new table">Add Table</button>
           </div>
           <button id="copy-input-btn">Copy</button>
           <button id="clear-input-btn">Clear Input</button>
@@ -43,10 +43,15 @@
       </div>
     </div>
     <footer>
-      <small><a href="https://github.com/rzinak/jsql" rel="noreferrer"
-          target="_blank">github.com/rzinak/jsql</a></small>
-      <small>&nbsp;&middot;&nbsp;</small>
-      <small><a href="https://rzin.vercel.app" rel="noreferrer" target="_blank">rzin.vercel.app</a></small>
+      <div class="footer-left">
+        <small><a href="https://github.com/rzinak/jsql" rel="noreferrer"
+            target="_blank">github.com/rzinak/jsql</a></small>
+        <small>&nbsp;&middot;&nbsp;</small>
+        <small><a href="https://rzin.vercel.app" rel="noreferrer" target="_blank">rzin.vercel.app</a></small>
+      </div>
+      <div class="footer-right">
+        <button id="reset-btn" title="Reset stored JSON if you experience any bug">Reset Factory</button>
+      </div>
     </footer>
   </div>
   <script type="module" src="/src/ui/main.ts"></script>

@@ -1,3 +1,5 @@
+
+
 export const FLAT_INITIAL_DATA = [
   { "id": 1, "name": "Alice", "age": 25, "city": "Rio" },
   { "id": 2, "name": "Bob", "age": 17, "city": "SP" },
