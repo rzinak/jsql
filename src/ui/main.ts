@@ -1,4 +1,9 @@
-// TODO: add a 'copy' button, to copy all text from either the input or output panels
+// TODO: let the user create data sources -- tables --, i already added a select there in the 'input json' section.
+// i could start with some in-memory data, so it wont start empty;
+// no need for a modal now, window.prompt is enough for now;
+// one thing i should keep in mind is during the 'context switch', as i would need to save the current data inside
+// the in-memory storage, should not allow the user to change the data source if there's something wrong;
+// need a global state for the current data source;
 
 import { evaluate } from "../engine/evaluator.ts";
 import { tokenize } from "../engine/lexer.ts";
@@ -20,7 +25,7 @@ jsonInput.value = JSON.stringify(NESTED_INITIAL_DATA, null, 2);
 // query.value = 'select id, age, city, address from data where LIKE "rua%"';
 // query.value = 'select id, age, city, address from data where address.street LIKE "rua%"';
 // query.value = 'SELECT name, preferences.language FROM users WHERE preferences.language LIKE "pt%"';
-query.value = 'SELECT preferences.language FROM users WHERE preferences.language LIKE "pt%"';
+query.value = 'SELECT name, preferences.language, address FROM users WHERE preferences.language LIKE "pt%"';
 
 const run = () => {
   try {
