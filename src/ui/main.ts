@@ -1,3 +1,5 @@
+// TODO: implement GROUP BY e Aggregates (COUNT, SUM, AVG, MAX, MIN)
+
 import { evaluate } from "../engine/evaluator.ts";
 import { tokenize } from "../engine/lexer.ts";
 import { parse } from "../engine/parser.ts";
@@ -31,6 +33,9 @@ const storedTable = localStorage.getItem(TABLE_KEY);
 const database: Record<string, any[]> = storedData ? JSON.parse(storedData) : SEED_DATA;
 
 let currentTable: string = storedTable || Object.keys(database)[0];
+
+let typingTimer: number | undefined;
+const doneTypingInterval = 500;
 
 const saveState = () => {
   try {
@@ -138,6 +143,8 @@ const copyToClipboard = async (text: string): Promise<void> => {
   }
 }
 
+const onTypingComplete = () => saveState();
+
 copyInputBtn.addEventListener('click', () => copyToClipboard(jsonInput.value));
 
 clearInputBtn.addEventListener('click', () => {
@@ -170,6 +177,11 @@ query?.addEventListener('keydown', (event) => {
 });
 
 jsonInput.addEventListener('blur', saveState);
+
+jsonInput.addEventListener('input', () => {
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(onTypingComplete, doneTypingInterval);
+});
 
 resetBtn.addEventListener('click', () => {
   if (confirm('Do you really want to delete all created tables and revert to the default ones?')) {
