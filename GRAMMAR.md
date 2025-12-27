@@ -40,10 +40,12 @@ DESC
 ```
 =
 >
+<
 
 >=
 <=
 !=
+LIKE
 ```
 
 ### Special Symbols
@@ -69,6 +71,9 @@ Names defined by the user:
 - Examples: `"Rio de Janeiro"`, `"Flamengo"`
 - Pattern: `"[^"]*"` (basically anything inside quotes)
 
+### Booleans
+- Values: `true`, `false`
+
 ### Whitespace
 - Whitespaces, tabs and break-line
 - **Ignored during parsing**
@@ -82,9 +87,10 @@ Columns    -> * | ColumnList
 ColumnList -> Identifier (, Identifier)*
 Conditions -> Condition ((AND | OR) Condition)*
 Condition  -> Identifier Operator Literal
-Operator   -> = | > | < | >= | <= | !=
-Literal    -> Number | String
+Operator   -> = | > | < | >= | <= | != | LIKE
+Literal    -> Number | String | Boolean
 OrderClause-> Identifier [Direction]
 Direction  -> ASC | DESC
+Boolean    -> true | false
 Number     -> Digit+
 Digit      -> 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
