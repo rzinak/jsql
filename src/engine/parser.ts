@@ -1,10 +1,11 @@
-import type { AST, Operator, Order, Token, TokenType, WhereExpression } from "./types";
+import { KEYWORDS } from "./lexer";
+import type { AST, Operator, Order, SelectItem, Token, TokenType, WhereExpression } from "./types";
 
 export const parse = (tokens: Token[]): AST => {
   let current = 0;
-  const columns: string[] = [];
+  const selectColumns: SelectItem[] = [];
 
-  const peek = (): Token => tokens[current];
+  const peek = (ahead?: number): Token => tokens[(ahead ? current + ahead : current)];
 
   const isAtEnd = (): boolean => current >= tokens.length;
 
@@ -20,6 +21,7 @@ export const parse = (tokens: Token[]): AST => {
     if (check(type, expectedValue)) {
       return tokens[current++];
     }
+
     throw new Error(`Syntax error: Expected '${expectedValue || type}', but received '${peek().value}'`);
   }
 
@@ -29,16 +31,55 @@ export const parse = (tokens: Token[]): AST => {
   };
 
   const parseColumns = () => {
+    // console.log(peek().value)
     if (check('SYMBOL', '*')) {
-      columns.push(consume('SYMBOL').value);
+      selectColumns.push({ type: "ColumnRef", name: consume('SYMBOL').value });
     } else {
-      columns.push(consume('IDENTIFIER').value);
+      let currToken = consume('IDENTIFIER').value;
+
+      if (peek().value === '(') {
+        consume('SYMBOL').value;
+        selectColumns.push(
+          {
+            type: 'AggregateExpr',
+            name: currToken,
+            arg: consume('STRING').value
+          }
+        );
+      } else {
+        selectColumns.push(
+          {
+            type: 'ColumnRef',
+            name: currToken
+          }
+        );
+      }
+
       while (check('SYMBOL', ',')) {
         consume('SYMBOL', ',');
-        columns.push(consume('IDENTIFIER').value);
+        currToken = consume('IDENTIFIER').value;
+        if (peek().value === '(') {
+          consume('SYMBOL', '(');
+          const arg = consume('SYMBOL').value;
+          consume('SYMBOL', ')');
+          selectColumns.push(
+            {
+              type: 'AggregateExpr',
+              name: currToken,
+              arg
+            }
+          );
+        } else {
+          selectColumns.push(
+            {
+              type: 'ColumnRef',
+              name: currToken
+            }
+          );
+        }
       }
     }
-    return columns;
+    return selectColumns;
   }
 
   const parseFrom = () => {
@@ -121,6 +162,21 @@ export const parse = (tokens: Token[]): AST => {
     return null;
   }
 
+  const parseGroupBy = (): string[] | null => {
+    if (check('KEYWORD', 'GROUP')) {
+      consume('KEYWORD', 'GROUP');
+      consume('KEYWORD', 'BY');
+      const groupByColumns: string[] = [];
+      groupByColumns.push(consume('IDENTIFIER').value);
+      while (check('SYMBOL', ',')) {
+        consume('SYMBOL', ',');
+        groupByColumns.push(consume('IDENTIFIER').value);
+      }
+      return groupByColumns;
+    }
+    return null;
+  }
+
   const parseOrder = (): Order[] | null => {
     if (check('KEYWORD', 'ORDER')) {
       consume('KEYWORD', 'ORDER');
@@ -166,9 +222,12 @@ export const parse = (tokens: Token[]): AST => {
     select: parseSelect() ?? [],
     from: parseFrom(),
     where: parseWhere(),
+    groupBy: parseGroupBy() ?? [],
     order: parseOrder(),
     limit: parseLimit()
   };
+
+  console.log('ast:', ast);
 
   return ast;
 }

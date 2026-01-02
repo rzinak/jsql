@@ -25,16 +25,47 @@ const logicalOperators: Record<LogicalOperator, (a: boolean, b: boolean) => bool
   'NOT': (a, _b) => !a
 }
 
+// const resolvePath = (obj: unknown, path: { name: string }): number | string => {
+//   console.log('obj:', obj);
+//   console.log('path:', path);
+//   console.log(1);
+//   const val = path.name
+//     .split('.')
+//     .reduce((acc: unknown, part: string) => {
+//       if (acc == null || typeof acc !== 'object') {
+//         return undefined;
+//       }
+//       return (acc as Record<string, unknown>)[part];
+//     }, obj);
+//   console.log(2);
+//
+//   if (typeof val === 'string' || typeof val === 'number') {
+//     return val;
+//   }
+//   console.log(3);
+//
+//   throw new Error(`Path ${path.name} does not resolve to a valid value. got ${typeof val}`);
+// }
+
 const resolvePath = (obj: any, path: string): number | string => {
+  // console.log('obj:', obj);
+  // console.log('path:', path);
   return path.split('.').reduce((acc, part) => {
     return acc && acc[part];
   }, obj);
 }
 
 const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boolean => {
+  // console.log('expression; ', expression);
+  // console.log('row; ', row);
+
   if (expression.type === 'Comparison') {
     const { left, operator, right } = expression;
+    // console.log('left: ', left);
+    // console.log('operator: ', operator);
+    // console.log('right: ', right);
     const leftVal = resolvePath(row, left);
+    // console.log('leftVal: ', leftVal);
     const opFunction = operators[operator];
 
     if (!opFunction) {
@@ -61,6 +92,41 @@ const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boo
   }
 
   throw new Error(`Unknown expression type: ${(expression as any).type}`);
+}
+
+const applyGrouping = (result: DataRow[], columns: string[]) => {
+  console.log(result);
+  const map: { [key: string]: DataRow[] } = {};
+  console.log('columns:', columns);
+  result.forEach((line) => {
+    let key = line[columns.join('-')];
+    console.log('line:', line[key]);
+    if (!map[key]) {
+      map[key] = [line];
+    } else {
+      map[key].push(line);
+    }
+  });
+  // const map = new Map<string, DataRow[]>();
+  // result.forEach((line) => {
+  //   let key = columns.join('-');
+  //   if (map.has(key)) {
+  //     map.set
+  //   }
+  // });
+  console.log('map:', map);
+
+  const newRows = [];
+
+  for (const col of columns) {
+    for (const key in map) {
+      console.log('col:', col);
+      console.log('key:', key);
+      newRows.push({ [col]: key });
+    }
+  }
+
+  return newRows;
 }
 
 const applyOrdering = (result: DataRow[], orders: Order[] | null): DataRow[] => {
@@ -112,26 +178,35 @@ export const evaluate = (ast: AST, data: any[]) => {
     result = result.filter((row) => evaluateWhereExpression(ast.where!, row));
   }
 
+  if (ast.groupBy) {
+    result = applyGrouping(result, ast.groupBy);
+  }
+
+  console.log('result after grouping:', result);
+
   result = applyOrdering(result, ast.order);
 
   if (ast.limit) {
     result = result.slice(0, ast.limit);
   }
 
-  if (!(ast.select.length === 1 && ast.select[0] === '*')) {
+  // if (!(ast.select.length === 1) && ast.select[0].name !== '*' && !ast.groupBy) {
+  if (ast.select[0].name !== '*' && !ast.groupBy) {
+    console.log('result inside select:', result);
     result = result.map((row) => {
       const newRow: any = {};
       ast.select.forEach((col) => {
-        const objValue = resolvePath(row, col);
-        const obj = buildObj(col, objValue);
-        if (col.includes('.') && row.hasOwnProperty(Object.keys(obj))) {
+        const objValue = resolvePath(row, col.name);
+        const obj = buildObj(col.name, objValue);
+        if (row.hasOwnProperty(Object.keys(obj))) {
           newRow[Object.keys(obj)[0]] = Object.values(obj)[0];
         } else if (row.hasOwnProperty(col)) {
-          newRow[col] = row[col];
+          newRow[col.name] = row[col.name];
         }
       });
       return newRow;
     });
   }
+
   return result
 }
