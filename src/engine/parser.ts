@@ -1,3 +1,4 @@
+import { KEYWORDS } from "./lexer";
 import type {
   AST,
   Operator,
@@ -45,7 +46,6 @@ export const parse = (tokens: Token[]): AST => {
       selectColumns.push({ type: "ColumnRef", name: consume("SYMBOL").value });
     } else {
       let currToken = consume("IDENTIFIER").value;
-
       if (peek().value === "(") {
         consume("SYMBOL").value;
         selectColumns.push({
@@ -54,31 +54,56 @@ export const parse = (tokens: Token[]): AST => {
           arg: consume("STRING").value,
         });
       } else {
+          let alias: string | null = null;
+          if (check("KEYWORD", "AS")) {
+            consume("KEYWORD", "AS");
+            alias = consume("IDENTIFIER").value;
+          }
         selectColumns.push({
           type: "ColumnRef",
           name: currToken,
+          alias
         });
       }
 
       while (check("SYMBOL", ",")) {
         consume("SYMBOL", ",");
+        if (tokens[current].type === 'KEYWORD') {
+        currToken = consume("KEYWORD").value;
+        } else {
         currToken = consume("IDENTIFIER").value;
+        }
+        
         if (peek().value === "(") {
           consume("SYMBOL", "(");
           const arg = consume("SYMBOL").value;
           consume("SYMBOL", ")");
+          let alias: string | null = null;
+          if (check("KEYWORD", "AS")) {
+            consume("KEYWORD", "AS");
+            alias = consume("IDENTIFIER").value;
+          }
           selectColumns.push({
             type: "AggregateExpr",
             name: currToken,
             arg,
+            alias
           });
         } else {
+          let alias: string | null = null;
+          if (check("KEYWORD", "AS")) {
+            consume("KEYWORD", "AS");
+            alias = consume("IDENTIFIER").value;
+          }
           selectColumns.push({
             type: "ColumnRef",
             name: currToken,
+            alias
           });
         }
       }
+
+      
     }
     return selectColumns;
   };
@@ -230,5 +255,6 @@ export const parse = (tokens: Token[]): AST => {
     limit: parseLimit(),
   };
 
+  console.log('ast:',ast);
   return ast;
 };

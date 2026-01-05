@@ -48,8 +48,8 @@ export type AggregateExpr = {
 };
 
 export type SelectItem =
-  | { type: "ColumnRef", name: string }
-  | { type: "AggregateExpr", name: string, arg: string };
+  | { type: "ColumnRef", name: string, alias?: null | string }
+  | { type: "AggregateExpr", name: string, arg: string, alias?: null | string };
 
 export type AST = {
   // "select": string[];

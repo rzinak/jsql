@@ -84,17 +84,19 @@ const applyGrouping = (result: DataRow[], groupByColumns: string[], selectItems:
 
     selectItems.forEach(item => {
       if (item.type === 'ColumnRef') {
-        newRow[item.name] = resolvePath(firstRow, item.name);
+        item.alias
+          ? newRow[item.alias] = resolvePath(firstRow, item.name)
+          : newRow[item.name] = resolvePath(firstRow, item.name);
       } else if (item.type === 'AggregateExpr') {
         // TODO: implement aggregate expression
-        // const value = calculateAggregate(item.name, item.arg, groupRows);
+        // const value = calculatejjjAggregate(item.name, item.arg, groupRows);
         // const colName = `${item.name}(${item.arg})`;
         // newRow[colName] = value;
       }
     });
     return newRow;
   });
-
+  
   return finalResult;
 }
 

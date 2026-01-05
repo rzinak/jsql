@@ -13,7 +13,8 @@ export const KEYWORDS = [
   "DESC",
   "ASC",
   "GROUP",
-  // "COUNT",
+  "COUNT",
+  "AS"
   // "SUM",
   // "AVG",
   // "MAX",
