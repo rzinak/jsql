@@ -1,5 +1,3 @@
-
-
 export const FLAT_INITIAL_DATA = [
   { "id": 1, "name": "Alice", "age": 25, "city": "Rio" },
   { "id": 2, "name": "Bob", "age": 17, "city": "SP" },
@@ -83,7 +81,7 @@ export const NESTED_INITIAL_DATA = [
     "id": 2,
     "name": "Bob",
     "age": 17,
-    "city": "SP",
+    "city": "São Paulo",
     "meta": {
       "views": 50,
       "created_at": "2022-08-10",

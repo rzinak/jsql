@@ -1,4 +1,5 @@
-// TODO: implement GROUP BY e Aggregates (COUNT, SUM, AVG, MAX, MIN)
+// TODO: Aggregates (COUNT, SUM, AVG, MAX, MIN)
+// TODO: implement AS
 
 import { evaluate } from "../engine/evaluator.ts";
 import { tokenize } from "../engine/lexer.ts";
@@ -17,7 +18,18 @@ const selectElement = document.getElementById('table-selector') as HTMLSelectEle
 const addTableBtn = document.getElementById('add-table-btn') as HTMLButtonElement;
 const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
 
-query.value = 'SELECT * from example_flat where age = 25';
+// query.value = 'SELECT * from example_flat where age = 25';
+// query.value = 'SELECT preferences.language, COUNT(*) FROM example_nested GROUP BY preferences.language';
+
+// query.value = 'SELECT preferences.language FROM example_nested GROUP BY preferences.language';
+
+// query.value = 'SELECT preferences.language, AVG(age), SUM(meta.views) FROM example_nested GROUP BY preferences.language';
+// query.value = 'SELECT preferences.notifications.sms, MIN(age), MAX(age) FROM example_nested GROUP BY preferences.notifications.sms';
+//query.value = 'SELECT preferences.language, COUNT(*) FROM example_nested WHERE age > 25 GROUP BY preferences.language';
+query.value = 'SELECT city, age FROM example_nested GROUP BY city, age';
+
+// test this one as well
+// query.value = 'SELECT preferences.language, COUNT(*) FROM example_nested GROUP BY preferences.language';
 
 const STORAGE_KEY = 'jsql_database';
 const TABLE_KEY = 'jsq_current_table';

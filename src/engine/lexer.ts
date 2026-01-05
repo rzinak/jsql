@@ -1,6 +1,6 @@
 import type { Token } from "./types";
 
-const KEYWORDS = [
+export const KEYWORDS = [
   "SELECT",
   "FROM",
   "WHERE",
@@ -12,6 +12,12 @@ const KEYWORDS = [
   "LIMIT",
   "DESC",
   "ASC",
+  "GROUP",
+  // "COUNT",
+  // "SUM",
+  // "AVG",
+  // "MAX",
+  // "MIN",
 ];
 
 export const tokenize = (query: string): Token[] => {
@@ -30,7 +36,6 @@ export const tokenize = (query: string): Token[] => {
   // @ts-ignore
   const peek = (): Token => tokens[current];
 
-  // @ts-ignore
   const isAtEnd = (): boolean => current >= tokens.length;
 
   // @ts-ignore
@@ -48,7 +53,7 @@ export const tokenize = (query: string): Token[] => {
       continue;
     }
 
-    if (',*'.includes(char)) {
+    if (',*()'.includes(char)) {
       tokens.push({ type: 'SYMBOL', value: char });
       current++;
       continue;

@@ -40,10 +40,23 @@ export type Order = {
   "direction": "ASC" | "DESC" | null;
 }
 
+export type ColumnRef = string[];
+
+export type AggregateExpr = {
+  "func": string;
+  "arg": string;
+};
+
+export type SelectItem =
+  | { type: "ColumnRef", name: string }
+  | { type: "AggregateExpr", name: string, arg: string };
+
 export type AST = {
-  "select": string[];
+  // "select": string[];
+  "select": SelectItem[];
   "from": string;
   "where": WhereExpression | null;
+  "groupBy": string[];
   "order": Order[] | null;
   "limit": number | null;
 }
