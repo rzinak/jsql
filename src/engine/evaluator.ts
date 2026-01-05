@@ -25,28 +25,6 @@ const logicalOperators: Record<LogicalOperator, (a: boolean, b: boolean) => bool
   'NOT': (a, _b) => !a
 }
 
-// const resolvePath = (obj: unknown, path: { name: string }): number | string => {
-//   console.log('obj:', obj);
-//   console.log('path:', path);
-//   console.log(1);
-//   const val = path.name
-//     .split('.')
-//     .reduce((acc: unknown, part: string) => {
-//       if (acc == null || typeof acc !== 'object') {
-//         return undefined;
-//       }
-//       return (acc as Record<string, unknown>)[part];
-//     }, obj);
-//   console.log(2);
-//
-//   if (typeof val === 'string' || typeof val === 'number') {
-//     return val;
-//   }
-//   console.log(3);
-//
-//   throw new Error(`Path ${path.name} does not resolve to a valid value. got ${typeof val}`);
-// }
-
 const resolvePath = (obj: any, path: string): number | string => {
   return path.split('.').reduce((acc, part) => {
     return acc && acc[part];
@@ -86,7 +64,6 @@ const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boo
   throw new Error(`Unknown expression type: ${(expression as any).type}`);
 }
 
-const calculateAggregate = () => {}
 
 const applyGrouping = (result: DataRow[], groupByColumns: string[], selectItems: SelectItem[]) => {
   const groups: { [key: string]: DataRow[] } = {};
