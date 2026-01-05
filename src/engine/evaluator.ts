@@ -1,4 +1,4 @@
-import type { AST, LogicalOperator, Operator, Order, WhereExpression } from "./types";
+import type { AST, LogicalOperator, Operator, Order, SelectItem, WhereExpression } from "./types";
 
 export type DataRow = Record<string, any>;
 
@@ -48,24 +48,16 @@ const logicalOperators: Record<LogicalOperator, (a: boolean, b: boolean) => bool
 // }
 
 const resolvePath = (obj: any, path: string): number | string => {
-  // console.log('obj:', obj);
-  // console.log('path:', path);
   return path.split('.').reduce((acc, part) => {
     return acc && acc[part];
   }, obj);
 }
 
 const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boolean => {
-  // console.log('expression; ', expression);
-  // console.log('row; ', row);
 
   if (expression.type === 'Comparison') {
     const { left, operator, right } = expression;
-    // console.log('left: ', left);
-    // console.log('operator: ', operator);
-    // console.log('right: ', right);
     const leftVal = resolvePath(row, left);
-    // console.log('leftVal: ', leftVal);
     const opFunction = operators[operator];
 
     if (!opFunction) {
@@ -94,39 +86,39 @@ const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boo
   throw new Error(`Unknown expression type: ${(expression as any).type}`);
 }
 
-const applyGrouping = (result: DataRow[], columns: string[]) => {
-  console.log(result);
-  const map: { [key: string]: DataRow[] } = {};
-  console.log('columns:', columns);
-  result.forEach((line) => {
-    let key = line[columns.join('-')];
-    console.log('line:', line[key]);
-    if (!map[key]) {
-      map[key] = [line];
-    } else {
-      map[key].push(line);
+const calculateAggregate = () => {}
+
+const applyGrouping = (result: DataRow[], groupByColumns: string[], selectItems: SelectItem[]) => {
+  const groups: { [key: string]: DataRow[] } = {};
+  
+  result.forEach(row => {
+    const groupKey = groupByColumns.map(colName => resolvePath(row, colName)).join('-');
+
+    if (!groups[groupKey]) {
+      groups[groupKey] = [];
     }
+    groups[groupKey].push(row);
   });
-  // const map = new Map<string, DataRow[]>();
-  // result.forEach((line) => {
-  //   let key = columns.join('-');
-  //   if (map.has(key)) {
-  //     map.set
-  //   }
-  // });
-  console.log('map:', map);
 
-  const newRows = [];
+  const finalResult = Object.keys(groups).map(key => {
+    const groupRows = groups[key];
+    const firstRow = groupRows[0];
+    const newRow: { [key:string]:string | number } = {};
 
-  for (const col of columns) {
-    for (const key in map) {
-      console.log('col:', col);
-      console.log('key:', key);
-      newRows.push({ [col]: key });
-    }
-  }
+    selectItems.forEach(item => {
+      if (item.type === 'ColumnRef') {
+        newRow[item.name] = resolvePath(firstRow, item.name);
+      } else if (item.type === 'AggregateExpr') {
+        // TODO: implement aggregate expression
+        // const value = calculateAggregate(item.name, item.arg, groupRows);
+        // const colName = `${item.name}(${item.arg})`;
+        // newRow[colName] = value;
+      }
+    });
+    return newRow;
+  });
 
-  return newRows;
+  return finalResult;
 }
 
 const applyOrdering = (result: DataRow[], orders: Order[] | null): DataRow[] => {
@@ -179,10 +171,8 @@ export const evaluate = (ast: AST, data: any[]) => {
   }
 
   if (ast.groupBy) {
-    result = applyGrouping(result, ast.groupBy);
+    result = applyGrouping(result, ast.groupBy, ast.select);
   }
-
-  console.log('result after grouping:', result);
 
   result = applyOrdering(result, ast.order);
 
@@ -190,9 +180,7 @@ export const evaluate = (ast: AST, data: any[]) => {
     result = result.slice(0, ast.limit);
   }
 
-  // if (!(ast.select.length === 1) && ast.select[0].name !== '*' && !ast.groupBy) {
   if (ast.select[0].name !== '*' && !ast.groupBy) {
-    console.log('result inside select:', result);
     result = result.map((row) => {
       const newRow: any = {};
       ast.select.forEach((col) => {

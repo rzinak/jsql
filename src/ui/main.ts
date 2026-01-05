@@ -1,4 +1,4 @@
-// TODO: implement GROUP BY e Aggregates (COUNT, SUM, AVG, MAX, MIN)
+// TODO: Aggregates (COUNT, SUM, AVG, MAX, MIN)
 // TODO: implement AS
 
 import { evaluate } from "../engine/evaluator.ts";
@@ -26,7 +26,7 @@ const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
 // query.value = 'SELECT preferences.language, AVG(age), SUM(meta.views) FROM example_nested GROUP BY preferences.language';
 // query.value = 'SELECT preferences.notifications.sms, MIN(age), MAX(age) FROM example_nested GROUP BY preferences.notifications.sms';
 //query.value = 'SELECT preferences.language, COUNT(*) FROM example_nested WHERE age > 25 GROUP BY preferences.language';
-query.value = 'SELECT city FROM example_nested GROUP BY city';
+query.value = 'SELECT city, age FROM example_nested GROUP BY city, age';
 
 // test this one as well
 // query.value = 'SELECT preferences.language, COUNT(*) FROM example_nested GROUP BY preferences.language';
@@ -146,9 +146,6 @@ const run = () => {
     resultOutput.textContent = err.message;
   }
 }
-
-// FIXME: remove this
-// run();
 
 const copyToClipboard = async (text: string): Promise<void> => {
   try {
