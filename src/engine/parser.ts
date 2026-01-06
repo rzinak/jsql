@@ -1,4 +1,3 @@
-import { KEYWORDS } from "./lexer";
 import type {
   AST,
   Operator,
@@ -47,7 +46,10 @@ export const parse = (tokens: Token[]): AST => {
     } else {
       let currToken = consume("IDENTIFIER").value;
       if (peek().value === "(") {
+      console.log('eelse')
+        console.log(2);
         consume("SYMBOL").value;
+        console.log(11);
         selectColumns.push({
           type: "AggregateExpr",
           name: currToken,
@@ -76,7 +78,9 @@ export const parse = (tokens: Token[]): AST => {
         
         if (peek().value === "(") {
           consume("SYMBOL", "(");
-          const arg = consume("SYMBOL").value;
+          // since it can have different types of arguments, i'm getting the type
+          // according to the current token type
+          const arg = consume(tokens[current].type).value;
           consume("SYMBOL", ")");
           let alias: string | null = null;
           if (check("KEYWORD", "AS")) {
@@ -255,6 +259,5 @@ export const parse = (tokens: Token[]): AST => {
     limit: parseLimit(),
   };
 
-  console.log('ast:',ast);
   return ast;
 };

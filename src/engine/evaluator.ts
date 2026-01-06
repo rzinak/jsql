@@ -64,10 +64,22 @@ const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boo
   throw new Error(`Unknown expression type: ${(expression as any).type}`);
 }
 
+const calculateAggregate = (name: string, arg: string, rows: DataRow[]) => {
+  switch (name) {
+    case 'COUNT':
+      if (arg === '*') {
+        return rows.length;
+      } else {
+        return rows.filter(m => m[arg] !== null).length;
+      }
+    default:
+      throw new Error(`Unrecognized aggregate function '${name}'`);
+  }
+}
 
 const applyGrouping = (result: DataRow[], groupByColumns: string[], selectItems: SelectItem[]) => {
   const groups: { [key: string]: DataRow[] } = {};
-  
+
   result.forEach(row => {
     const groupKey = groupByColumns.map(colName => resolvePath(row, colName)).join('-');
 
@@ -78,9 +90,9 @@ const applyGrouping = (result: DataRow[], groupByColumns: string[], selectItems:
   });
 
   const finalResult = Object.keys(groups).map(key => {
-    const groupRows = groups[key];
+    let groupRows = groups[key];
     const firstRow = groupRows[0];
-    const newRow: { [key:string]:string | number } = {};
+    const newRow: { [key: string]: string | number } = {};
 
     selectItems.forEach(item => {
       if (item.type === 'ColumnRef') {
@@ -88,15 +100,21 @@ const applyGrouping = (result: DataRow[], groupByColumns: string[], selectItems:
           ? newRow[item.alias] = resolvePath(firstRow, item.name)
           : newRow[item.name] = resolvePath(firstRow, item.name);
       } else if (item.type === 'AggregateExpr') {
-        // TODO: implement aggregate expression
-        // const value = calculatejjjAggregate(item.name, item.arg, groupRows);
-        // const colName = `${item.name}(${item.arg})`;
-        // newRow[colName] = value;
+        const value = calculateAggregate(item.name, item.arg, groupRows);
+        const colName = `${item.name}(${item.arg})`;
+        item.alias
+          ? newRow[item.alias] = value
+          : newRow[colName] = value;
       }
     });
     return newRow;
-  });
-  
+    // i added this filter because i didn't find another way of removing null values from the result
+    // if COUNT receives a column instead of '*'.
+    // gotta keep this in mind in case it causes problems in the future for other aggregate functions
+    // if that happens, i prob have to change the way i pass the result value around the code...
+    // it works because i return the length of 'rows' after filtering for non null values in the
+    // 'calculateAggregate' function, so here i filter them out.
+  }).filter(row => Object.values(row).some(val => val !== 0 && val !== null));
   return finalResult;
 }
 

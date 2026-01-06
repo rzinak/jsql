@@ -14,11 +14,11 @@ export const KEYWORDS = [
   "ASC",
   "GROUP",
   "COUNT",
-  "AS"
-  // "SUM",
-  // "AVG",
-  // "MAX",
-  // "MIN",
+  "AS",
+  "SUM",
+  "AVG",
+  "MAX",
+  "MIN",
 ];
 
 export const tokenize = (query: string): Token[] => {

@@ -26,7 +26,7 @@ const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
 // query.value = 'SELECT preferences.language, AVG(age), SUM(meta.views) FROM example_nested GROUP BY preferences.language';
 // query.value = 'SELECT preferences.notifications.sms, MIN(age), MAX(age) FROM example_nested GROUP BY preferences.notifications.sms';
 //query.value = 'SELECT preferences.language, COUNT(*) FROM example_nested WHERE age > 25 GROUP BY preferences.language';
-query.value = 'SELECT city as teste, age as idade, COUNT(*) as total FROM example_nested GROUP BY city, age';
+query.value = 'SELECT city as cidade, COUNT(city) as total_moradores FROM example_nested GROUP BY city';
 // example output for the query above would be:
 // [
 //   {
