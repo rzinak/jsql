@@ -1,5 +1,4 @@
-// TODO: Aggregates (COUNT, SUM, AVG, MAX, MIN)
-// TODO: implement AS for both aggregate and normal columns
+// TODO: Aggregates (SUM, AVG, MAX, MIN)
 
 import { evaluate } from "../engine/evaluator.ts";
 import { tokenize } from "../engine/lexer.ts";
@@ -26,7 +25,9 @@ const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
 // query.value = 'SELECT preferences.language, AVG(age), SUM(meta.views) FROM example_nested GROUP BY preferences.language';
 // query.value = 'SELECT preferences.notifications.sms, MIN(age), MAX(age) FROM example_nested GROUP BY preferences.notifications.sms';
 //query.value = 'SELECT preferences.language, COUNT(*) FROM example_nested WHERE age > 25 GROUP BY preferences.language';
-query.value = 'SELECT city as cidade, COUNT(city) as total_moradores FROM example_nested GROUP BY city';
+// query.value = 'SELECT city as cidade, COUNT(DISTINCT age) as idades_unicas FROM example_nested GROUP BY city';
+query.value = 'SELECT preferences.language as lang, COUNT(*) as total FROM example_nested GROUP BY preferences.language';
+// query.value = 'SELECT city as cidade, COUNT(DISTINCT city) as total_moradores FROM example_nested GROUP BY city';
 // example output for the query above would be:
 // [
 //   {

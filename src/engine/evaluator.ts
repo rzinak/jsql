@@ -1,4 +1,4 @@
-import type { AST, LogicalOperator, Operator, Order, SelectItem, WhereExpression } from "./types";
+import type { AggregateItem, AST, LogicalOperator, Operator, Order, SelectItem, WhereExpression } from "./types";
 
 export type DataRow = Record<string, any>;
 
@@ -64,13 +64,18 @@ const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boo
   throw new Error(`Unknown expression type: ${(expression as any).type}`);
 }
 
-const calculateAggregate = (name: string, arg: string, rows: DataRow[]) => {
-  switch (name) {
+const calculateAggregate = (item: AggregateItem, rows: DataRow[]) => {
+  switch (item.name) {
     case 'COUNT':
-      if (arg === '*') {
+      if (item.arg === '*') {
         return rows.length;
       } else {
-        return rows.filter(m => m[arg] !== null).length;
+        if (item.distinct) {
+          // following sql behavior, distinct also ignores null values
+          const filteredRows = rows.filter(row => row[item.arg] !== null);
+          return new Set(filteredRows.map(row => row[item.arg])).size;
+        }
+        return rows.filter(row => row[item.arg] !== null).length;
       }
     default:
       throw new Error(`Unrecognized aggregate function '${name}'`);
@@ -100,7 +105,7 @@ const applyGrouping = (result: DataRow[], groupByColumns: string[], selectItems:
           ? newRow[item.alias] = resolvePath(firstRow, item.name)
           : newRow[item.name] = resolvePath(firstRow, item.name);
       } else if (item.type === 'AggregateExpr') {
-        const value = calculateAggregate(item.name, item.arg, groupRows);
+        const value = calculateAggregate(item, groupRows);
         const colName = `${item.name}(${item.arg})`;
         item.alias
           ? newRow[item.alias] = value

@@ -46,14 +46,17 @@ export const parse = (tokens: Token[]): AST => {
     } else {
       let currToken = consume("IDENTIFIER").value;
       if (peek().value === "(") {
-      console.log('eelse')
-        console.log(2);
         consume("SYMBOL").value;
-        console.log(11);
+        let distinct: boolean = false;
+        if (check("KEYWORD", "DISTINCT")) {
+          consume("KEYWORD", "DISTINCT");
+          distinct = true;
+        }
         selectColumns.push({
           type: "AggregateExpr",
           name: currToken,
           arg: consume("STRING").value,
+          distinct
         });
       } else {
           let alias: string | null = null;
@@ -70,16 +73,22 @@ export const parse = (tokens: Token[]): AST => {
 
       while (check("SYMBOL", ",")) {
         consume("SYMBOL", ",");
+
         if (tokens[current].type === 'KEYWORD') {
-        currToken = consume("KEYWORD").value;
+          currToken = consume("KEYWORD").value;
         } else {
-        currToken = consume("IDENTIFIER").value;
+          currToken = consume("IDENTIFIER").value;
         }
         
         if (peek().value === "(") {
           consume("SYMBOL", "(");
           // since it can have different types of arguments, i'm getting the type
           // according to the current token type
+          let distinct: boolean = false;
+          if (check("KEYWORD", 'DISTINCT')) {
+            consume("KEYWORD", "DISTINCT").value;
+            distinct = true;
+          }
           const arg = consume(tokens[current].type).value;
           consume("SYMBOL", ")");
           let alias: string | null = null;
@@ -91,7 +100,8 @@ export const parse = (tokens: Token[]): AST => {
             type: "AggregateExpr",
             name: currToken,
             arg,
-            alias
+            alias,
+            distinct
           });
         } else {
           let alias: string | null = null;
@@ -106,8 +116,6 @@ export const parse = (tokens: Token[]): AST => {
           });
         }
       }
-
-      
     }
     return selectColumns;
   };
@@ -258,6 +266,6 @@ export const parse = (tokens: Token[]): AST => {
     order: parseOrder(),
     limit: parseLimit(),
   };
-
+  
   return ast;
 };
