@@ -13,6 +13,7 @@ SELECT name AS full_name FROM users
 SELECT SUM(age) FROM users GROUP BY city
 SELECT COUNT(DISTINCT city) FROM users
 SELECT name, age FROM users ORDER BY age DESC, name ASC
+SELECT preferences.language as lang, COUNT(*) as total_users FROM example_nested WHERE age >= 25 GROUP BY preferences.language HAVING total_users >= 2
 ```
 
 ---
@@ -96,7 +97,7 @@ Names defined by the user:
 
 ## 3. Formal Grammar
 ```
-Query      -> SELECT Columns FROM Table [WHERE Conditions] [GROUP BY GroupClause] [ORDER BY OrderClause] [LIMIT Number]
+Query      -> SELECT Columns FROM Table [WHERE Conditions] [GROUP BY GroupClause] [HAVING HavingClause] [ORDER BY OrderClause] [LIMIT Number]
 Columns    -> * | ColumnList
 ColumnList -> Column (, Column)*
 Column     -> Identifier [AS Identifier] | Aggregate [AS Identifier]
@@ -108,6 +109,7 @@ Condition  -> Identifier Operator Literal
 Operator   -> = | > | < | >= | <= | != | LIKE
 Literal    -> Number | String | Boolean
 GroupClause-> Identifier (, Identifier)*
+HavingClause-> Condition
 OrderClause-> OrderSpec (, OrderSpec)*
 OrderSpec  -> Identifier [Direction]
 Direction  -> ASC | DESC
