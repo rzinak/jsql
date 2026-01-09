@@ -14,6 +14,9 @@ const resultOutput = document.getElementById('result-output') as HTMLPreElement;
 const selectElement = document.getElementById('table-selector') as HTMLSelectElement;
 const addTableBtn = document.getElementById('add-table-btn') as HTMLButtonElement;
 const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
+const toast = document.getElementById('toast') as HTMLDivElement;
+const toastMessage = document.getElementById('toast-message') as HTMLSpanElement;
+const toastClose = document.getElementById('toast-close') as HTMLButtonElement;
 
 query.value = 'SELECT preferences.language as lang, COUNT(*) as total_users, AVG(meta.views) as avg_views FROM example_nested WHERE age >= 25 GROUP BY preferences.language HAVING total_users >= 2 ORDER BY avg_views DESC LIMIT 1';
 
@@ -133,11 +136,37 @@ const run = () => {
   }
 }
 
+const showToast = (message: string = 'Copied to clipboard!') => {
+  toastMessage.textContent = message;
+  toast.classList.remove('hide');
+  toast.classList.add('show');
+
+  const hideToast = () => {
+    toast.classList.remove('show');
+    toast.classList.add('hide');
+    setTimeout(() => {
+      toast.classList.remove('hide');
+    }, 300);
+  };
+
+  const timeout = setTimeout(hideToast, 3000);
+
+  const closeHandler = () => {
+    clearTimeout(timeout);
+    hideToast();
+    toastClose.removeEventListener('click', closeHandler);
+  };
+
+  toastClose.addEventListener('click', closeHandler);
+};
+
 const copyToClipboard = async (text: string): Promise<void> => {
   try {
     await navigator.clipboard.writeText(text);
+    showToast();
   } catch (err) {
-    console.error('Faiiled to copy text:', err);
+    console.error('Failed to copy text:', err);
+    showToast('Failed to copy!');
   }
 }
 
