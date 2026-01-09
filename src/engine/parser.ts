@@ -6,7 +6,7 @@ import type {
   Token,
   TokenType,
   WhereExpression,
-} from "./types";
+} from './types';
 
 export const parse = (tokens: Token[]): AST => {
   let current = 0;
@@ -36,85 +36,72 @@ export const parse = (tokens: Token[]): AST => {
   };
 
   const parseSelect = () => {
-    consume("KEYWORD", "SELECT");
+    consume('KEYWORD', 'SELECT');
     return parseColumns();
   };
+  
+  const parseAggregateExpr = (currToken: string, selectColumns: SelectItem[], changeCurrToken: boolean) => {
+    if (changeCurrToken) {
+      currToken = consume('KEYWORD').value;
+    }
+    consume("SYMBOL");
+    let distinct: boolean = false;
+    if (check('KEYWORD', 'DISTINCT')) {
+      consume('KEYWORD' , 'DISTINCT');
+      distinct = true;
+    }
+    const arg = consume('IDENTIFIER').value;
+    consume('SYMBOL');
+    let alias: string | null = null;
+    if (check('KEYWORD', 'AS')) {
+      consume('KEYWORD', 'AS');
+      alias = consume('IDENTIFIER').value;
+    }
+    selectColumns.push({
+      type: "AggregateExpr",
+      name: currToken,
+      arg,
+      alias,
+      distinct
+    });
+  }
+  
+  const parseColumnRef = (currToken: string, selectColumns: SelectItem[], changeCurrToken: boolean) => {
+    if (changeCurrToken) {
+      currToken = consume('IDENTIFIER').value;
+    }
+    let alias: string | null = null;
+    if (check('KEYWORD', 'AS')) {
+      consume('KEYWORD', 'AS');
+      alias = consume("IDENTIFIER").value;
+    }
+    selectColumns.push({
+      type: "ColumnRef",
+      name: currToken,
+      alias
+    });
+  }
 
   const parseColumns = () => {
-    if (check("SYMBOL", "*")) {
-      selectColumns.push({ type: "ColumnRef", name: consume("SYMBOL").value });
+    if (check('SYMBOL', '*')) {
+      selectColumns.push({ type: 'ColumnRef', name: consume('SYMBOL').value });
     } else {
-      let currToken = consume("IDENTIFIER").value;
-      if (peek().value === "(") {
-        consume("SYMBOL").value;
-        let distinct: boolean = false;
-        if (check("KEYWORD", "DISTINCT")) {
-          consume("KEYWORD", "DISTINCT");
-          distinct = true;
-        }
-        selectColumns.push({
-          type: "AggregateExpr",
-          name: currToken,
-          arg: consume("STRING").value,
-          distinct
-        });
-      } else {
-          let alias: string | null = null;
-          if (check("KEYWORD", "AS")) {
-            consume("KEYWORD", "AS");
-            alias = consume("IDENTIFIER").value;
-          }
-        selectColumns.push({
-          type: "ColumnRef",
-          name: currToken,
-          alias
-        });
-      }
+      let currToken = tokens[current].value;
+      // we cant start the select with either an identifier or aggregate function
+      peek(1).value === '('
+        ? parseAggregateExpr(currToken, selectColumns, true)
+        : parseColumnRef(currToken, selectColumns, true);
 
-      while (check("SYMBOL", ",")) {
-        consume("SYMBOL", ",");
-
-        if (tokens[current].type === 'KEYWORD') {
-          currToken = consume("KEYWORD").value;
-        } else {
-          currToken = consume("IDENTIFIER").value;
-        }
+      while (check('SYMBOL', ',')) {
+        consume('SYMBOL', ',');
         
-        if (peek().value === "(") {
-          consume("SYMBOL", "(");
-          // since it can have different types of arguments, i'm getting the type
-          // according to the current token type
-          let distinct: boolean = false;
-          if (check("KEYWORD", 'DISTINCT')) {
-            consume("KEYWORD", "DISTINCT").value;
-            distinct = true;
-          }
-          const arg = consume(tokens[current].type).value;
-          consume("SYMBOL", ")");
-          let alias: string | null = null;
-          if (check("KEYWORD", "AS")) {
-            consume("KEYWORD", "AS");
-            alias = consume("IDENTIFIER").value;
-          }
-          selectColumns.push({
-            type: "AggregateExpr",
-            name: currToken,
-            arg,
-            alias,
-            distinct
-          });
-        } else {
-          let alias: string | null = null;
-          if (check("KEYWORD", "AS")) {
-            consume("KEYWORD", "AS");
-            alias = consume("IDENTIFIER").value;
-          }
-          selectColumns.push({
-            type: "ColumnRef",
-            name: currToken,
-            alias
-          });
-        }
+        tokens[current].type === 'KEYWORD'
+          ? currToken = consume('KEYWORD').value
+          : currToken = consume('IDENTIFIER').value;
+        
+        peek().value === '('
+          ? parseAggregateExpr(currToken, selectColumns, false)
+          : parseColumnRef(currToken, selectColumns, false);
       }
     }
     return selectColumns;
@@ -267,7 +254,5 @@ export const parse = (tokens: Token[]): AST => {
     limit: parseLimit(),
   };
   
-  console.log(ast)
-
   return ast;
 };

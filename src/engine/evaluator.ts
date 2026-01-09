@@ -64,55 +64,45 @@ const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boo
   throw new Error(`Unknown expression type: ${(expression as any).type}`);
 }
 
+const calculateAggrCount = (item: AggregateItem, rows: DataRow[]) => {
+  if (item.arg === '*') {
+    return rows.length;
+  } else {
+    if (item.distinct) {
+      // following sql behavior, distinct also ignores null values
+      const filteredRows = rows.filter(row => resolvePath(row, item.arg) !== null);
+      return new Set(filteredRows.map(row => resolvePath(row, item.arg))).size;
+    }
+    return rows.filter(row => row[item.arg] !== null).length;   
+  }
+}
+
+const calculateAggrSum = (item: AggregateItem, rows: DataRow[]) => rows.reduce((acc: number, row: DataRow) => acc + Number(resolvePath(row, item.arg)), 0);
+
 const calculateAggregate = (item: AggregateItem, rows: DataRow[]) => {
   switch (item.name) {
     case 'COUNT':
-      if (item.arg === '*') {
-        return rows.length;
-      } else {
-        if (item.distinct) {
-          // following sql behavior, distinct also ignores null values
-          const filteredRows = rows.filter(row => row[item.arg] !== null);
-          return new Set(filteredRows.map(row => row[item.arg])).size;
-        }
-        return rows.filter(row => row[item.arg] !== null).length;
-      }
+      return calculateAggrCount(item, rows);
     case 'SUM':
-      return rows.reduce((acc: number, row: DataRow) => acc + Number(resolvePath(row, item.arg)), 0);
-    // FIXME: messy af, fix this before pushing
+      return calculateAggrSum(item, rows); 
     case 'AVG':
-      const countRet = () => {
-        if (item.arg === '*') {
-          return rows.length;
-        } else {
-          if (item.distinct) {
-            // following sql behavior, distinct also ignores null values
-            const filteredRows = rows.filter(row => row[item.arg] !== null);
-            return new Set(filteredRows.map(row => row[item.arg])).size;
-          }
-          return rows.filter(row => row[item.arg] !== null).length;
-        }       
-      }
-      const sum = rows.reduce((acc: number, row: DataRow) => acc + Number(resolvePath(row, item.arg)), 0); 
-      return Number(sum) / countRet();
-    // FIXME: messy af, fix this before pushing
+      return Number(calculateAggrSum(item, rows)) / calculateAggrCount(item, rows);
     case 'MIN':
-      const minNums: number[] = [];
-      rows.forEach(row => {
-        if (typeof row[item.arg] === 'number') {
-          minNums.push(row[item.arg]);
+      return rows.reduce((min, row) => {
+        const value = Number(resolvePath(row, item.arg));
+        if (value < min) {
+          return value;
         }
-      });
-      return Math.min(...minNums);
-    // FIXME: messy af, fix this before pushing
+        return min;
+      }, Infinity);
     case 'MAX':
-      const maxNums: number[] = [];
-      rows.forEach(row => {
-        if (typeof row[item.arg] === 'number') {
-          maxNums.push(row[item.arg]);
+      return rows.reduce((max, row) => {
+        const value = Number(resolvePath(row, item.arg));
+        if (value > max) {
+          return value;
         }
-      });
-      return Math.max(...maxNums);
+        return max;
+      }, -Infinity);
     default:
       throw new Error(`Unrecognized aggregate function '${item.name}'`);
   }

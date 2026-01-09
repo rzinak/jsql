@@ -15,46 +15,7 @@ const selectElement = document.getElementById('table-selector') as HTMLSelectEle
 const addTableBtn = document.getElementById('add-table-btn') as HTMLButtonElement;
 const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
 
-// query.value = 'SELECT * from example_flat where age = 25';
-// query.value = 'SELECT preferences.language, COUNT(*) FROM example_nested GROUP BY preferences.language';
-
-// query.value = 'SELECT preferences.language FROM example_nested GROUP BY preferences.language';
-
-// query.value = 'SELECT preferences.language, AVG(age), SUM(meta.views) FROM example_nested GROUP BY preferences.language';
-// query.value = 'SELECT preferences.notifications.sms, MIN(age), MAX(age) FROM example_nested GROUP BY preferences.notifications.sms';
-//query.value = 'SELECT preferences.language, COUNT(*) FROM example_nested WHERE age > 25 GROUP BY preferences.language';
-// query.value = 'SELECT city as cidade, COUNT(DISTINCT age) as idades_unicas FROM example_nested GROUP BY city';
-// query.value = 'SELECT preferences.language as lang, COUNT(*) as total FROM example_nested GROUP BY preferences.language';
-// query.value = 'SELECT city as cidade, COUNT(DISTINCT city) as total_moradores FROM example_nested GROUP BY city';
-// example output for the query above would be:
-// [
-//   {
-//     "city": "Rio",
-//     "age": 25,
-//     "total": 1
-//   },
-//   {
-//     "city": "São Paulo",
-//     "age": 33,
-//     "total": 1
-//   }
-// ]
-
-// test this one as well
-// query.value = 'SELECT preferences.language, COUNT(*) FROM example_nested GROUP BY preferences.language';
-
-// SUM and AVG
-// query.value = 'SELECT city as cidade, SUM(meta.views) as total_views, AVG(meta.views) as media_views FROM example_nested GROUP BY city';
-
-// MIN and MAX
-// query.value = 'SELECT preferences.language as lang, MIN(age) as menor_idade, MAX(age) as maior_idade FROM example_nested GROUP BY preferences.language';
-
-// aggr + distinct + filter
-query.value = 'SELECT city, COUNT(*) as total_pessoas, SUM(meta.views) as soma_views, COUNT(DISTINCT preferences.color) as cores_unicas FROM example_nested WHERE age > 20 GROUP BY preferences.language';
-
-// edge testing
-// query.value = 'SELECT city, SUM(name) as soma_nomes, AVG(social.instagram) as media_social FROM example_nested GROUP BY city';
-// sum here returns zero or null, avg is trying to work on a field that doesnt exist!
+query.value = 'SELECT MIN(age) as menor_idade, MAX(age) as maior_idade, preferences.language as lang FROM example_nested GROUP BY preferences.language';
 
 const STORAGE_KEY = 'jsql_database';
 const TABLE_KEY = 'jsq_current_table';
@@ -171,8 +132,6 @@ const run = () => {
     resultOutput.textContent = err.message;
   }
 }
-
-run();
 
 const copyToClipboard = async (text: string): Promise<void> => {
   try {
