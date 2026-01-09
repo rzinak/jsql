@@ -7,6 +7,12 @@ SELECT name, age FROM users WHERE age > 18
 SELECT name, email, age FROM users WHERE age >= 18 AND city = "Rio de Janeiro"
 SELECT name, age FROM users WHERE age > 18 ORDER BY age DESC
 SELECT name, age from USERS WHERE age > 18 AND NOT city = "Rio de Janeiro" ORDER BY id DESC LIMIT 1
+SELECT COUNT(*) FROM users
+SELECT city, COUNT(*) FROM users GROUP BY city
+SELECT name AS full_name FROM users
+SELECT SUM(age) FROM users GROUP BY city
+SELECT COUNT(DISTINCT city) FROM users
+SELECT name, age FROM users ORDER BY age DESC, name ASC
 ```
 
 ---
@@ -21,6 +27,14 @@ WHERE
 ORDER
 BY
 LIMIT
+GROUP
+COUNT
+SUM
+AVG
+MIN
+MAX
+AS
+DISTINCT
 ```
 
 ### Logical Operators
@@ -82,14 +96,20 @@ Names defined by the user:
 
 ## 3. Formal Grammar
 ```
-Query      -> SELECT Columns FROM Table [WHERE Conditions] [ORDER BY OrderClause] [LIMIT Number]
+Query      -> SELECT Columns FROM Table [WHERE Conditions] [GROUP BY GroupClause] [ORDER BY OrderClause] [LIMIT Number]
 Columns    -> * | ColumnList
-ColumnList -> Identifier (, Identifier)*
+ColumnList -> Column (, Column)*
+Column     -> Identifier [AS Identifier] | Aggregate [AS Identifier]
+Aggregate  -> Func ( [DISTINCT] Arg )
+Func       -> COUNT | SUM | AVG | MIN | MAX
+Arg        -> * | Identifier
 Conditions -> Condition ((AND | OR) Condition)*
 Condition  -> Identifier Operator Literal
 Operator   -> = | > | < | >= | <= | != | LIKE
 Literal    -> Number | String | Boolean
-OrderClause-> Identifier [Direction]
+GroupClause-> Identifier (, Identifier)*
+OrderClause-> OrderSpec (, OrderSpec)*
+OrderSpec  -> Identifier [Direction]
 Direction  -> ASC | DESC
 Boolean    -> true | false
 Number     -> Digit+

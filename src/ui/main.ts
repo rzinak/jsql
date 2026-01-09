@@ -1,5 +1,3 @@
-// TODO: Aggregates (SUM, AVG, MAX, MIN)
-
 import { evaluate } from "../engine/evaluator.ts";
 import { tokenize } from "../engine/lexer.ts";
 import { parse } from "../engine/parser.ts";
@@ -17,33 +15,7 @@ const selectElement = document.getElementById('table-selector') as HTMLSelectEle
 const addTableBtn = document.getElementById('add-table-btn') as HTMLButtonElement;
 const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
 
-// query.value = 'SELECT * from example_flat where age = 25';
-// query.value = 'SELECT preferences.language, COUNT(*) FROM example_nested GROUP BY preferences.language';
-
-// query.value = 'SELECT preferences.language FROM example_nested GROUP BY preferences.language';
-
-// query.value = 'SELECT preferences.language, AVG(age), SUM(meta.views) FROM example_nested GROUP BY preferences.language';
-// query.value = 'SELECT preferences.notifications.sms, MIN(age), MAX(age) FROM example_nested GROUP BY preferences.notifications.sms';
-//query.value = 'SELECT preferences.language, COUNT(*) FROM example_nested WHERE age > 25 GROUP BY preferences.language';
-// query.value = 'SELECT city as cidade, COUNT(DISTINCT age) as idades_unicas FROM example_nested GROUP BY city';
-query.value = 'SELECT preferences.language as lang, COUNT(*) as total FROM example_nested GROUP BY preferences.language';
-// query.value = 'SELECT city as cidade, COUNT(DISTINCT city) as total_moradores FROM example_nested GROUP BY city';
-// example output for the query above would be:
-// [
-//   {
-//     "city": "Rio",
-//     "age": 25,
-//     "total": 1
-//   },
-//   {
-//     "city": "São Paulo",
-//     "age": 33,
-//     "total": 1
-//   }
-// ]
-
-// test this one as well
-// query.value = 'SELECT preferences.language, COUNT(*) FROM example_nested GROUP BY preferences.language';
+query.value = 'SELECT MIN(age) as menor_idade, MAX(age) as maior_idade, preferences.language as lang FROM example_nested GROUP BY preferences.language';
 
 const STORAGE_KEY = 'jsql_database';
 const TABLE_KEY = 'jsq_current_table';

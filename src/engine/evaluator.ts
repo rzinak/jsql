@@ -64,21 +64,47 @@ const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boo
   throw new Error(`Unknown expression type: ${(expression as any).type}`);
 }
 
+const calculateAggrCount = (item: AggregateItem, rows: DataRow[]) => {
+  if (item.arg === '*') {
+    return rows.length;
+  } else {
+    if (item.distinct) {
+      // following sql behavior, distinct also ignores null values
+      const filteredRows = rows.filter(row => resolvePath(row, item.arg) !== null);
+      return new Set(filteredRows.map(row => resolvePath(row, item.arg))).size;
+    }
+    return rows.filter(row => row[item.arg] !== null).length;   
+  }
+}
+
+const calculateAggrSum = (item: AggregateItem, rows: DataRow[]) => rows.reduce((acc: number, row: DataRow) => acc + Number(resolvePath(row, item.arg)), 0);
+
 const calculateAggregate = (item: AggregateItem, rows: DataRow[]) => {
   switch (item.name) {
     case 'COUNT':
-      if (item.arg === '*') {
-        return rows.length;
-      } else {
-        if (item.distinct) {
-          // following sql behavior, distinct also ignores null values
-          const filteredRows = rows.filter(row => row[item.arg] !== null);
-          return new Set(filteredRows.map(row => row[item.arg])).size;
+      return calculateAggrCount(item, rows);
+    case 'SUM':
+      return calculateAggrSum(item, rows); 
+    case 'AVG':
+      return Number(calculateAggrSum(item, rows)) / calculateAggrCount(item, rows);
+    case 'MIN':
+      return rows.reduce((min, row) => {
+        const value = Number(resolvePath(row, item.arg));
+        if (value < min) {
+          return value;
         }
-        return rows.filter(row => row[item.arg] !== null).length;
-      }
+        return min;
+      }, Infinity);
+    case 'MAX':
+      return rows.reduce((max, row) => {
+        const value = Number(resolvePath(row, item.arg));
+        if (value > max) {
+          return value;
+        }
+        return max;
+      }, -Infinity);
     default:
-      throw new Error(`Unrecognized aggregate function '${name}'`);
+      throw new Error(`Unrecognized aggregate function '${item.name}'`);
   }
 }
 
