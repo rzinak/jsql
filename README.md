@@ -13,5 +13,7 @@ jsql allows you to run SQL queries against JSON datasets directly in the browser
 - **Standard SQL Syntax**: `SELECT`, `FROM`, `WHERE`, `ORDER BY`, `LIMIT`.
 - **Deep JSON Access**: Query nested properties using dot notation (e.g., `address.city`).
 - **Filtering**: Support for `AND`, `OR`, `NOT`, and comparison operators (`=`, `>`, `<`, `>=`, `<=`, `!=`, `LIKE`).
-- **Sorting**: Order results by any field in `ASC` or `DESC` order.
+- **Sorting**: Order results by any field in `ASC` or `DESC` order, including multiple columns.
+- **Grouping and Aggregation**: `GROUP BY` with aggregate functions like `COUNT`, `SUM`, `AVG`, `MIN`, `MAX`, including `DISTINCT` support.
+- **Aliases**: Rename columns and aggregates using `AS`.
 - **Instant Feedback**: Runs in real-time in the browser.
