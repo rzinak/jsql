@@ -15,5 +15,7 @@ jsql allows you to run SQL queries against JSON datasets directly in the browser
 - **Filtering**: Support for `AND`, `OR`, `NOT`, and comparison operators (`=`, `>`, `<`, `>=`, `<=`, `!=`, `LIKE`).
 - **Sorting**: Order results by any field in `ASC` or `DESC` order, including multiple columns.
 - **Grouping and Aggregation**: `GROUP BY` with aggregate functions like `COUNT`, `SUM`, `AVG`, `MIN`, `MAX`, including `DISTINCT` support.
+  - Columns not in `SELECT` but used in `GROUP BY` are allowed; an arbitrary value from the group is returned (typically the first record).
+  - `GROUP BY` columns do not automatically appear in results—only columns specified in `SELECT` are returned.
 - **Aliases**: Rename columns and aggregates using `AS`.
 - **Instant Feedback**: Runs in real-time in the browser.
