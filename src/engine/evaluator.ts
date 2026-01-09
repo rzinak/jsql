@@ -77,8 +77,44 @@ const calculateAggregate = (item: AggregateItem, rows: DataRow[]) => {
         }
         return rows.filter(row => row[item.arg] !== null).length;
       }
+    case 'SUM':
+      return rows.reduce((acc: number, row: DataRow) => acc + Number(resolvePath(row, item.arg)), 0);
+    // FIXME: messy af, fix this before pushing
+    case 'AVG':
+      const countRet = () => {
+        if (item.arg === '*') {
+          return rows.length;
+        } else {
+          if (item.distinct) {
+            // following sql behavior, distinct also ignores null values
+            const filteredRows = rows.filter(row => row[item.arg] !== null);
+            return new Set(filteredRows.map(row => row[item.arg])).size;
+          }
+          return rows.filter(row => row[item.arg] !== null).length;
+        }       
+      }
+      const sum = rows.reduce((acc: number, row: DataRow) => acc + Number(resolvePath(row, item.arg)), 0); 
+      return Number(sum) / countRet();
+    // FIXME: messy af, fix this before pushing
+    case 'MIN':
+      const minNums: number[] = [];
+      rows.forEach(row => {
+        if (typeof row[item.arg] === 'number') {
+          minNums.push(row[item.arg]);
+        }
+      });
+      return Math.min(...minNums);
+    // FIXME: messy af, fix this before pushing
+    case 'MAX':
+      const maxNums: number[] = [];
+      rows.forEach(row => {
+        if (typeof row[item.arg] === 'number') {
+          maxNums.push(row[item.arg]);
+        }
+      });
+      return Math.max(...maxNums);
     default:
-      throw new Error(`Unrecognized aggregate function '${name}'`);
+      throw new Error(`Unrecognized aggregate function '${item.name}'`);
   }
 }
 

@@ -267,5 +267,7 @@ export const parse = (tokens: Token[]): AST => {
     limit: parseLimit(),
   };
   
+  console.log(ast)
+
   return ast;
 };
