@@ -15,7 +15,7 @@ const selectElement = document.getElementById('table-selector') as HTMLSelectEle
 const addTableBtn = document.getElementById('add-table-btn') as HTMLButtonElement;
 const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
 
-query.value = 'SELECT MIN(age) as menor_idade, MAX(age) as maior_idade, preferences.language as lang FROM example_nested GROUP BY preferences.language';
+query.value = 'SELECT preferences.language as lang, COUNT(*) as total_users, AVG(meta.views) as avg_views FROM example_nested WHERE age >= 25 GROUP BY preferences.language HAVING total_users >= 2 ORDER BY avg_views DESC LIMIT 1';
 
 const STORAGE_KEY = 'jsql_database';
 const TABLE_KEY = 'jsq_current_table';

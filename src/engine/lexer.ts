@@ -19,7 +19,8 @@ export const KEYWORDS = [
   "AVG",
   "MAX",
   "MIN",
-  "DISTINCT"
+  "DISTINCT",
+  "HAVING"
 ];
 
 export const tokenize = (query: string): Token[] => {

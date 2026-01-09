@@ -34,6 +34,8 @@ export type Where = {
   "right": number | string;
 }
 
+export type HavingExpression = ComparisonExpression | LogicalBinaryExpression | LogicalUnaryExpression;
+
 export type Order = {
   "type": "OrderSpecification";
   "prop": string;
@@ -59,6 +61,7 @@ export type AST = {
   "from": string;
   "where": WhereExpression | null;
   "groupBy": string[];
+  "having": HavingExpression | null;
   "order": Order[] | null;
   "limit": number | null;
 }

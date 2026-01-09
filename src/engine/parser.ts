@@ -39,18 +39,23 @@ export const parse = (tokens: Token[]): AST => {
     consume('KEYWORD', 'SELECT');
     return parseColumns();
   };
-  
+
   const parseAggregateExpr = (currToken: string, selectColumns: SelectItem[], changeCurrToken: boolean) => {
     if (changeCurrToken) {
       currToken = consume('KEYWORD').value;
     }
-    consume("SYMBOL");
+    consume("SYMBOL", "(");
     let distinct: boolean = false;
     if (check('KEYWORD', 'DISTINCT')) {
-      consume('KEYWORD' , 'DISTINCT');
+      consume('KEYWORD', 'DISTINCT');
       distinct = true;
     }
-    const arg = consume('IDENTIFIER').value;
+
+    let arg;
+    check('SYMBOL')
+      ? arg = consume('SYMBOL', '*').value
+      : arg = consume('IDENTIFIER').value;
+
     consume('SYMBOL');
     let alias: string | null = null;
     if (check('KEYWORD', 'AS')) {
@@ -65,7 +70,7 @@ export const parse = (tokens: Token[]): AST => {
       distinct
     });
   }
-  
+
   const parseColumnRef = (currToken: string, selectColumns: SelectItem[], changeCurrToken: boolean) => {
     if (changeCurrToken) {
       currToken = consume('IDENTIFIER').value;
@@ -94,11 +99,11 @@ export const parse = (tokens: Token[]): AST => {
 
       while (check('SYMBOL', ',')) {
         consume('SYMBOL', ',');
-        
+
         tokens[current].type === 'KEYWORD'
           ? currToken = consume('KEYWORD').value
           : currToken = consume('IDENTIFIER').value;
-        
+
         peek().value === '('
           ? parseAggregateExpr(currToken, selectColumns, false)
           : parseColumnRef(currToken, selectColumns, false);
@@ -205,6 +210,22 @@ export const parse = (tokens: Token[]): AST => {
     return null;
   };
 
+  const parseHaving = () => {
+    if (check("KEYWORD", "HAVING")) {
+      consume("KEYWORD", "HAVING");
+
+      let expression = parseAndExpression();
+
+      while (check("KEYWORD", "OR")) {
+        const operator = consume("KEYWORD", "OR").value as "OR";
+        const right = parseAndExpression();
+        expression = { type: "LogicalBinary", operator, left: expression, right };
+      }
+      return expression;
+    }
+    return null;
+  }
+
   const parseOrder = (): Order[] | null => {
     if (check("KEYWORD", "ORDER")) {
       consume("KEYWORD", "ORDER");
@@ -250,9 +271,10 @@ export const parse = (tokens: Token[]): AST => {
     from: parseFrom(),
     where: parseWhere(),
     groupBy: parseGroupBy() ?? [],
+    having: parseHaving(),
     order: parseOrder(),
     limit: parseLimit(),
   };
-  
+
   return ast;
 };

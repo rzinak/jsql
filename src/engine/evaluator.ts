@@ -1,4 +1,4 @@
-import type { AggregateItem, AST, LogicalOperator, Operator, Order, SelectItem, WhereExpression } from "./types";
+import type { AggregateItem, AST, HavingExpression, LogicalOperator, Operator, Order, SelectItem, WhereExpression } from "./types";
 
 export type DataRow = Record<string, any>;
 
@@ -32,7 +32,38 @@ const resolvePath = (obj: any, path: string): number | string => {
 }
 
 const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boolean => {
+  if (expression.type === 'Comparison') {
+    const { left, operator, right } = expression;
+    const leftVal = resolvePath(row, left);
+    const opFunction = operators[operator];
 
+    if (!opFunction) {
+      throw new Error(`Unknown operator: ${operator}`);
+    }
+
+    return opFunction(leftVal, right);
+  } else if (expression.type === 'LogicalBinary') {
+    // handles the recursive case (LogicalExpression)
+    const { operator, left, right } = expression;
+
+    const leftResult: boolean = evaluateWhereExpression(left, row);
+    const rightResult: boolean = evaluateWhereExpression(right, row);
+    const logicalFunction = logicalOperators[operator];
+
+    if (!logicalFunction) {
+      throw new Error(`Unknown logical operator: ${operator}`);
+    }
+
+    return logicalFunction(leftResult, rightResult);
+  } else if (expression.type === 'LogicalUnary') {
+    const { operand } = expression;
+    return !evaluateWhereExpression(operand, row);
+  }
+
+  throw new Error(`Unknown expression type: ${(expression as any).type}`);
+}
+
+const evaluateHavingExpression = (expression: HavingExpression, row: DataRow): boolean => {
   if (expression.type === 'Comparison') {
     const { left, operator, right } = expression;
     const leftVal = resolvePath(row, left);
@@ -73,7 +104,7 @@ const calculateAggrCount = (item: AggregateItem, rows: DataRow[]) => {
       const filteredRows = rows.filter(row => resolvePath(row, item.arg) !== null);
       return new Set(filteredRows.map(row => resolvePath(row, item.arg))).size;
     }
-    return rows.filter(row => row[item.arg] !== null).length;   
+    return rows.filter(row => row[item.arg] !== null).length;
   }
 }
 
@@ -84,7 +115,7 @@ const calculateAggregate = (item: AggregateItem, rows: DataRow[]) => {
     case 'COUNT':
       return calculateAggrCount(item, rows);
     case 'SUM':
-      return calculateAggrSum(item, rows); 
+      return calculateAggrSum(item, rows);
     case 'AVG':
       return Number(calculateAggrSum(item, rows)) / calculateAggrCount(item, rows);
     case 'MIN':
@@ -200,6 +231,10 @@ export const evaluate = (ast: AST, data: any[]) => {
 
   if (ast.groupBy) {
     result = applyGrouping(result, ast.groupBy, ast.select);
+  }
+
+  if (ast.having) {
+    result = result.filter((row) => evaluateHavingExpression(ast.having!, row));
   }
 
   result = applyOrdering(result, ast.order);
