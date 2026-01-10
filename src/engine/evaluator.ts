@@ -140,6 +140,10 @@ const calculateAggregate = (item: AggregateItem, rows: DataRow[]) => {
 }
 
 const applyGrouping = (result: DataRow[], groupByColumns: string[], selectItems: SelectItem[]) => {
+  if (groupByColumns.length === 0) {
+    return result;
+  }
+
   const groups: { [key: string]: DataRow[] } = {};
 
   result.forEach(row => {
@@ -224,6 +228,7 @@ const buildObj = (path: string, value: any, obj: any = {}) => {
 
 export const evaluate = (ast: AST, data: any[]) => {
   let result = data;
+  console.log('result:',result);
 
   if (ast.where) {
     result = result.filter((row) => evaluateWhereExpression(ast.where!, row));
@@ -242,6 +247,8 @@ export const evaluate = (ast: AST, data: any[]) => {
   if (ast.limit) {
     result = result.slice(0, ast.limit);
   }
+  
+
 
   if (ast.select[0].name !== '*' && !ast.groupBy) {
     result = result.map((row) => {
