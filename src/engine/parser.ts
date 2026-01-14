@@ -1,5 +1,7 @@
 import type {
   AST,
+  ColumnPath,
+  From,
   Operator,
   Order,
   SelectItem,
@@ -40,10 +42,7 @@ export const parse = (tokens: Token[]): AST => {
     return parseColumns();
   };
 
-  const parseAggregateExpr = (currToken: string, selectColumns: SelectItem[], changeCurrToken: boolean) => {
-    if (changeCurrToken) {
-      currToken = consume('KEYWORD').value;
-    }
+  const parseAggregateExpr = (functionName: string, selectColumns: SelectItem[]) => {
     consume("SYMBOL", "(");
     let distinct: boolean = false;
     if (check('KEYWORD', 'DISTINCT')) {
@@ -51,74 +50,93 @@ export const parse = (tokens: Token[]): AST => {
       distinct = true;
     }
 
-    let arg;
-    check('SYMBOL')
-      ? arg = consume('SYMBOL', '*').value
-      : arg = consume('IDENTIFIER').value;
-
-    consume('SYMBOL');
+    const ref = parseColumnPath();
+    let AggregateExprName = functionName;
+    
+    consume('SYMBOL', ')');
     let alias: string | null = null;
     if (check('KEYWORD', 'AS')) {
       consume('KEYWORD', 'AS');
       alias = consume('IDENTIFIER').value;
     }
     selectColumns.push({
-      type: "AggregateExpr",
-      name: currToken,
-      arg,
+      type: 'AggregateExpr',
+      ref,
+      name: AggregateExprName,
       alias,
       distinct
     });
   }
 
-  const parseColumnRef = (currToken: string, selectColumns: SelectItem[], changeCurrToken: boolean) => {
-    if (changeCurrToken) {
-      currToken = consume('IDENTIFIER').value;
-    }
+  const parseColumnRef = (selectColumns: SelectItem[]) => {
+    const ref = parseColumnPath();
     let alias: string | null = null;
     if (check('KEYWORD', 'AS')) {
       consume('KEYWORD', 'AS');
       alias = consume("IDENTIFIER").value;
     }
+    const columnName = ref.path[ref.path.length - 1];
     selectColumns.push({
-      type: "ColumnRef",
-      name: currToken,
+      type: 'ColumnRef',
+      ref,
+      columnName, 
       alias
     });
   }
-
+  
   const parseColumns = () => {
     if (check('SYMBOL', '*')) {
-      selectColumns.push({ type: 'ColumnRef', name: consume('SYMBOL').value });
+      selectColumns.push({
+        type: 'ColumnRef',
+        ref: {
+          tableAlias: null,
+          path: ['*'],
+        },
+        columnName: consume('SYMBOL').value,
+        alias: null,
+      })
     } else {
-      let currToken = tokens[current].value;
       // we cant start the select with either an identifier or aggregate function
-      peek(1).value === '('
-        ? parseAggregateExpr(currToken, selectColumns, true)
-        : parseColumnRef(currToken, selectColumns, true);
+      if (peek(1).value === '(') {
+        const identifier =  consume('KEYWORD').value;
+        parseAggregateExpr(identifier, selectColumns)
+      } else {
+        parseColumnRef(selectColumns); 
+      }
 
       while (check('SYMBOL', ',')) {
         consume('SYMBOL', ',');
-
-        tokens[current].type === 'KEYWORD'
-          ? currToken = consume('KEYWORD').value
-          : currToken = consume('IDENTIFIER').value;
-
-        peek().value === '('
-          ? parseAggregateExpr(currToken, selectColumns, false)
-          : parseColumnRef(currToken, selectColumns, false);
+        
+        if (peek(1).value === '(') {
+          const identifier = consume('KEYWORD').value;
+          parseAggregateExpr(identifier, selectColumns);
+        } else {
+          parseColumnRef(selectColumns);
+        }
       }
     }
     return selectColumns;
   };
 
-  const parseFrom = () => {
+  const parseFrom = (): From => {
     consume("KEYWORD", "FROM");
-    return consume("IDENTIFIER").value
+    const table = consume("IDENTIFIER").value;
+    if (!isAtEnd() && peek().type !== 'KEYWORD') {
+      return {
+        table,
+        alias: consume("IDENTIFIER").value
+      }
+    }
+    return {
+      table,
+      alias: null
+    }
   };
+  
+  const parseJoin = () => null;
 
   const parseComparison = (): WhereExpression => {
-    const left = consume("IDENTIFIER").value;
+    const left = parseColumnPath();
     const operator = consume("OPERATOR").value as Operator;
     const rightToken = peek();
 
@@ -128,10 +146,7 @@ export const parse = (tokens: Token[]): AST => {
       right = Number(consume("NUMBER").value);
     } else if (rightToken.type === "STRING") {
       right = consume("STRING").value;
-    } else if (
-      rightToken.type === "KEYWORD" ||
-      rightToken.type === "IDENTIFIER"
-    ) {
+    } else if (rightToken.type === "KEYWORD" || rightToken.type === "IDENTIFIER") {
       const val = rightToken.value.toLowerCase();
 
       if (val === "true") {
@@ -146,7 +161,7 @@ export const parse = (tokens: Token[]): AST => {
     } else {
       right = consume(rightToken.type).value;
     }
-
+    
     return {
       type: "Comparison",
       left,
@@ -195,20 +210,45 @@ export const parse = (tokens: Token[]): AST => {
     return null;
   };
 
-  const parseGroupBy = (): string[] | null => {
+  const parseGroupBy = (): ColumnPath[] | null => {
     if (check("KEYWORD", "GROUP")) {
       consume("KEYWORD", "GROUP");
       consume("KEYWORD", "BY");
-      const groupByColumns: string[] = [];
-      groupByColumns.push(consume("IDENTIFIER").value);
+
+      const groupByColumns: ColumnPath[] = [];
+      
+      groupByColumns.push(parseColumnPath());
+
       while (check("SYMBOL", ",")) {
         consume("SYMBOL", ",");
-        groupByColumns.push(consume("IDENTIFIER").value);
+        groupByColumns.push(parseColumnPath());
       }
+
       return groupByColumns;
     }
     return null;
   };
+  
+  const parseColumnPath = (): ColumnPath => {
+    if (check('SYMBOL')) {
+      return {
+        tableAlias: null,
+        path: [consume('SYMBOL').value]
+      }
+    }
+
+    const parts: string[] = [consume('IDENTIFIER').value];
+    
+    while (check('SYMBOL', '.')) {
+      consume('SYMBOL', '.');
+      parts.push(consume('IDENTIFIER').value);
+    }
+    
+    return {
+      tableAlias: null,
+      path: parts
+    }
+  }
 
   const parseHaving = () => {
     if (check("KEYWORD", "HAVING")) {
@@ -269,6 +309,7 @@ export const parse = (tokens: Token[]): AST => {
   const ast: AST = {
     select: parseSelect() ?? [],
     from: parseFrom(),
+    joins: parseJoin(),
     where: parseWhere(),
     groupBy: parseGroupBy() ?? [],
     having: parseHaving(),

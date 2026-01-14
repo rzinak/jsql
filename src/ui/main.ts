@@ -1,7 +1,9 @@
+// TODO: implement JOIN
+
 import { evaluate } from "../engine/evaluator.ts";
 import { tokenize } from "../engine/lexer.ts";
 import { parse } from "../engine/parser.ts";
-import { FLAT_INITIAL_DATA, NESTED_INITIAL_DATA } from "../utils/data.ts";
+import { CITIES, FLAT_INITIAL_DATA, NESTED_INITIAL_DATA, USERS } from "../utils/data.ts";
 
 const query = document.getElementById('query-input') as HTMLInputElement;
 const runBtn = document.getElementById('run-btn') as HTMLButtonElement;
@@ -18,14 +20,24 @@ const toast = document.getElementById('toast') as HTMLDivElement;
 const toastMessage = document.getElementById('toast-message') as HTMLSpanElement;
 const toastClose = document.getElementById('toast-close') as HTMLButtonElement;
 
-query.value = 'SELECT preferences.language as lang, COUNT(*) as total_users, AVG(meta.views) as avg_views FROM example_nested WHERE age >= 25 GROUP BY preferences.language HAVING total_users >= 2 ORDER BY avg_views DESC LIMIT 1';
+query.value = 'SELECT name, preferences.notifications.sms, meta.views FROM example_nested WHERE preferences.color = blue';
+
+// query.value = 'SELECT preferences.language as lang, COUNT(*) as total_users, AVG(meta.views) as avg_views FROM example_nested WHERE age >= 25 GROUP BY preferences.language HAVING total_users >= 2 ORDER BY avg_views DESC LIMIT 1';
+
+// query.value = 'SELECT COUNT(*) as total, AVG(age) as media_idade FROM example_nested';
+
+// TODO: IMPLEMENT JOIN!
+// JOIN TEST
+// query.value = 'SELECT u.name as usuario, c.name as cidade, c.uf FROM users u JOIN cities c ON u.city_id = c.id';
 
 const STORAGE_KEY = 'jsql_database';
 const TABLE_KEY = 'jsq_current_table';
 
 const SEED_DATA = {
-  "example_nested": NESTED_INITIAL_DATA,
-  "example_flat": FLAT_INITIAL_DATA,
+   "example_nested": NESTED_INITIAL_DATA,
+  "example_flat": FLAT_INITIAL_DATA, 
+  "users": USERS,
+  "cities": CITIES
 }
 
 const storedData = localStorage.getItem(STORAGE_KEY);
@@ -123,8 +135,8 @@ const run = () => {
     resultOutput.textContent = '';
     const tokens = tokenize(query.value);
     const parsed = parse(tokens);
-    if (parsed.from !== currentTable) {
-      throw new Error(`Table '${parsed.from}' not found. Did you mean '${currentTable}'?`);
+    if (parsed.from.table !== currentTable) {
+      throw new Error(`Table '${parsed.from.table}' not found. Did you mean '${currentTable}'?`);
     }
     const parsedInputJson = JSON.parse(jsonInput.value);
     const evaluated = evaluate(parsed, parsedInputJson);
