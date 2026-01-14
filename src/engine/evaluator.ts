@@ -248,9 +248,8 @@ export const evaluate = (ast: AST, data: any[]) => {
     result = result.slice(0, ast.limit);
   }
   
-
-
-  if (ast.select[0].name !== '*' && !ast.groupBy) {
+  if (ast.select[0].name !== '*' && ast.groupBy.length === 0) {
+    console.log('inside here')
     result = result.map((row) => {
       const newRow: any = {};
       ast.select.forEach((col) => {
