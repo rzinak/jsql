@@ -1,3 +1,16 @@
+export const USERS = [
+{ "id": 1, "name": "Renan", "city_id": 101 },
+  { "id": 2, "name": "Alice", "city_id": 102 },
+  { "id": 3, "name": "Bob", "city_id": 101 },
+  { "id": 4, "name": "Charlie", "city_id": 999 }
+]
+
+export const CITIES = [
+  { "id": 101, "name": "Rio de Janeiro", "uf": "RJ" },
+  { "id": 102, "name": "São Paulo", "uf": "SP" },
+  { "id": 103, "name": "Belo Horizonte", "uf": "MG" } 
+]
+
 export const FLAT_INITIAL_DATA = [
   { "id": 1, "name": "Alice", "age": 25, "city": "Rio" },
   { "id": 2, "name": "Bob", "age": 17, "city": "SP" },

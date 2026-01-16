@@ -1,4 +1,4 @@
-import type { AggregateItem, AST, HavingExpression, LogicalOperator, Operator, Order, SelectItem, WhereExpression } from "./types";
+import type { AggregateItem, AST, ColumnPath, From, HavingExpression, LogicalOperator, Operator, Order, SelectItem, WhereExpression } from "./types";
 
 export type DataRow = Record<string, any>;
 
@@ -25,23 +25,72 @@ const logicalOperators: Record<LogicalOperator, (a: boolean, b: boolean) => bool
   'NOT': (a, _b) => !a
 }
 
-const resolvePath = (obj: any, path: string): number | string => {
-  return path.split('.').reduce((acc, part) => {
-    return acc && acc[part];
-  }, obj);
+const resolvePath = (row: any, colPath: ColumnPath): number | string => {
+  let current;
+  let finalPath = [...colPath.path];
+  
+  if (colPath.tableAlias) {
+    current = row[colPath.tableAlias];
+    if (finalPath[0] === colPath.tableAlias) {
+      finalPath.shift();
+    }
+  } else {
+    const keys = Object.keys(row);
+    if (keys.length === 1 && row[finalPath[0]] === undefined) {
+      current = row[keys[0]];
+    } else {
+      current = row;
+    }
+  }
+  
+  return finalPath.reduce((acc, key) => {
+    return (acc && acc[key] !== undefined) ? acc[key] : null;
+  }, current);
+  
+}
+
+const verifyTableAlias = (selectItems: SelectItem[], fromItems: From) => {
+  selectItems.forEach(item => {
+    // if the provided tableAlias doesnt match the tableAlies inside From,
+    // i assume its a column, instead of throwing an error
+    if (item.ref.tableAlias && item.ref.tableAlias !== fromItems.alias) {
+      /* if (fromItems.alias === null && item.ref.tableAlias) {
+        throw new Error(`Error when evaluating table alias '${item.ref.tableAlias}'. Are you sure a table with this alias exist?`);
+      } */
+
+      const itemName =
+        item.type === 'AggregateExpr'
+          ? item.name
+          : item.columnName;
+      console.warn(`Error when evaluating '${item.ref.tableAlias}.${itemName!}', there is no table with the alias '${item.ref.tableAlias}'. Did you mean '${fromItems.alias}.${itemName}'?`);
+      console.warn(`Anyway, now assuming that '${item.ref.tableAlias}' is a column!`);
+      // throw new Error(`Error when evaluating '${item.ref.tableAlias}.${itemName!}', there is no table with the alias '${item.ref.tableAlias}'. Did you mean '${fromItems.alias}.${itemName}'?`)
+      item.ref.tableAlias = null;
+    } 
+  });
 }
 
 const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boolean => {
   if (expression.type === 'Comparison') {
     const { left, operator, right } = expression;
     const leftVal = resolvePath(row, left);
-    const opFunction = operators[operator];
+    let rightVal;
 
+    if (typeof right === 'object' && right !== null && 'path' in right) {
+      rightVal = resolvePath(row, right);
+    } else {
+      rightVal = right;
+    }
+
+    const opFunction = operators[operator];
     if (!opFunction) {
       throw new Error(`Unknown operator: ${operator}`);
     }
+    
+    if (leftVal && rightVal) {
+      return opFunction(leftVal, rightVal);
+    }
 
-    return opFunction(leftVal, right);
   } else if (expression.type === 'LogicalBinary') {
     // handles the recursive case (LogicalExpression)
     const { operator, left, right } = expression;
@@ -67,13 +116,24 @@ const evaluateHavingExpression = (expression: HavingExpression, row: DataRow): b
   if (expression.type === 'Comparison') {
     const { left, operator, right } = expression;
     const leftVal = resolvePath(row, left);
+    let rightVal;
+
+    if (typeof right === 'object' && right !== null && 'path' in right) {
+      rightVal = resolvePath(row, right);
+    } else {
+      rightVal = right;
+    }
+
     const opFunction = operators[operator];
 
     if (!opFunction) {
       throw new Error(`Unknown operator: ${operator}`);
     }
 
-    return opFunction(leftVal, right);
+    if (leftVal && rightVal) {
+      return opFunction(leftVal, rightVal);
+    }
+
   } else if (expression.type === 'LogicalBinary') {
     // handles the recursive case (LogicalExpression)
     const { operator, left, right } = expression;
@@ -96,19 +156,19 @@ const evaluateHavingExpression = (expression: HavingExpression, row: DataRow): b
 }
 
 const calculateAggrCount = (item: AggregateItem, rows: DataRow[]) => {
-  if (item.arg === '*') {
+  if (item.ref.path[0] === '*') {
     return rows.length;
   } else {
     if (item.distinct) {
       // following sql behavior, distinct also ignores null values
-      const filteredRows = rows.filter(row => resolvePath(row, item.arg) !== null);
-      return new Set(filteredRows.map(row => resolvePath(row, item.arg))).size;
+      const filteredRows = rows.filter(row => resolvePath(row, item.ref) !== null);
+      return new Set(filteredRows.map(row => resolvePath(row, item.ref))).size;
     }
-    return rows.filter(row => row[item.arg] !== null).length;
+    return rows.filter(row => row[[...item.ref.path].join('.')] !== null).length;
   }
 }
 
-const calculateAggrSum = (item: AggregateItem, rows: DataRow[]) => rows.reduce((acc: number, row: DataRow) => acc + Number(resolvePath(row, item.arg)), 0);
+const calculateAggrSum = (item: AggregateItem, rows: DataRow[]) => rows.reduce((acc: number, row: DataRow) => acc + Number(resolvePath(row, item.ref)), 0);
 
 const calculateAggregate = (item: AggregateItem, rows: DataRow[]) => {
   switch (item.name) {
@@ -120,7 +180,7 @@ const calculateAggregate = (item: AggregateItem, rows: DataRow[]) => {
       return Number(calculateAggrSum(item, rows)) / calculateAggrCount(item, rows);
     case 'MIN':
       return rows.reduce((min, row) => {
-        const value = Number(resolvePath(row, item.arg));
+        const value = Number(resolvePath(row, item.ref));
         if (value < min) {
           return value;
         }
@@ -128,7 +188,7 @@ const calculateAggregate = (item: AggregateItem, rows: DataRow[]) => {
       }, Infinity);
     case 'MAX':
       return rows.reduce((max, row) => {
-        const value = Number(resolvePath(row, item.arg));
+        const value = Number(resolvePath(row, item.ref));
         if (value > max) {
           return value;
         }
@@ -139,16 +199,20 @@ const calculateAggregate = (item: AggregateItem, rows: DataRow[]) => {
   }
 }
 
-const applyGrouping = (result: DataRow[], groupByColumns: string[], selectItems: SelectItem[]) => {
+const applyGrouping = (result: DataRow[], groupByColumns: ColumnPath[], selectItems: SelectItem[]) => {
   if (groupByColumns.length === 0) {
     return result;
   }
 
   const groups: { [key: string]: DataRow[] } = {};
-
+  
   result.forEach(row => {
-    const groupKey = groupByColumns.map(colName => resolvePath(row, colName)).join('-');
-
+    const groupKey = groupByColumns
+      .map(colPath => {
+        const val = resolvePath(row, colPath);
+        return typeof val === 'object' ? JSON.stringify(val) : val;
+      }).join('-');
+    
     if (!groups[groupKey]) {
       groups[groupKey] = [];
     }
@@ -161,18 +225,24 @@ const applyGrouping = (result: DataRow[], groupByColumns: string[], selectItems:
     const newRow: { [key: string]: string | number } = {};
 
     selectItems.forEach(item => {
+      const val = item.type === 'ColumnRef'
+        ? resolvePath(firstRow, item.ref)
+        : calculateAggregate(item, groupRows);
+      
       if (item.type === 'ColumnRef') {
-        item.alias
-          ? newRow[item.alias] = resolvePath(firstRow, item.name)
-          : newRow[item.name] = resolvePath(firstRow, item.name);
-      } else if (item.type === 'AggregateExpr') {
-        const value = calculateAggregate(item, groupRows);
-        const colName = `${item.name}(${item.arg})`;
-        item.alias
-          ? newRow[item.alias] = value
-          : newRow[colName] = value;
+        const nested = item.ref.path.reduceRight((acc, key) => ({ [key]: acc }), val as any);
+        Object.assign(newRow, nested);
+      }
+
+      if (item.type === 'AggregateExpr') {
+        const nested = item.ref.path.reduceRight((acc, key) => ({ [key]: acc }), val as any);
+        Object.assign(newRow, nested);
+        if (item.alias) {
+          newRow[item.alias] = val;
+        }
       }
     });
+    
     return newRow;
     // i added this filter because i didn't find another way of removing null values from the result
     // if COUNT receives a column instead of '*'.
@@ -207,59 +277,62 @@ const applyOrdering = (result: DataRow[], orders: Order[] | null): DataRow[] => 
   return result;
 }
 
-const buildObj = (path: string, value: any, obj: any = {}) => {
-  const keys = path.split('.');
-  let current: any = obj;
-
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
-
-    if (i === keys.length - 1) {
-      current[key] = value;
-    } else {
-      if (!current[key] || typeof current[key] !== 'object') {
-        current[key] = {};
-      }
-      current = current[key];
-    }
-  }
-  return obj;
-}
-
 export const evaluate = (ast: AST, data: any[]) => {
-  let result = data;
-  console.log('result:',result);
+  const tableAlias = ast.from.alias || ast.from.table;
+  let result = data.map(item => ({ [tableAlias]: item}));
+
+  verifyTableAlias(ast.select, ast.from);
 
   if (ast.where) {
     result = result.filter((row) => evaluateWhereExpression(ast.where!, row));
   }
-
-  if (ast.groupBy) {
+  
+  const hasAggregate = ast.select.some(item => item.type === 'AggregateExpr');
+  
+  if (hasAggregate && ast.groupBy.length === 0) {
+    const summaryRow: any = {};
+    ast.select.map(item => {
+      if (item.type === 'AggregateExpr') {
+        const value = calculateAggregate(item, result);
+        const itemName =
+          item.alias
+            ? item.alias
+            : item.name;
+        summaryRow[itemName] = value;
+      }
+      return summaryRow;
+    });
+    result = [summaryRow]; 
+  }
+  
+  if (ast.groupBy.length > 0) {
     result = applyGrouping(result, ast.groupBy, ast.select);
+    if (ast.having) {
+      result = result.filter((row) => evaluateHavingExpression(ast.having!, row));
+    }
   }
-
-  if (ast.having) {
-    result = result.filter((row) => evaluateHavingExpression(ast.having!, row));
-  }
-
+  
   result = applyOrdering(result, ast.order);
 
   if (ast.limit) {
     result = result.slice(0, ast.limit);
   }
   
-  if (ast.select[0].name !== '*' && ast.groupBy.length === 0) {
-    console.log('inside here')
+  const itemName =
+    ast.select[0].type === 'AggregateExpr'
+      ? ast.select[0].name
+      : ast.select[0].columnName;
+
+  if (itemName !== '*') {
     result = result.map((row) => {
       const newRow: any = {};
       ast.select.forEach((col) => {
-        const objValue = resolvePath(row, col.name);
-        const obj = buildObj(col.name, objValue);
-        if (row.hasOwnProperty(Object.keys(obj))) {
-          newRow[Object.keys(obj)[0]] = Object.values(obj)[0];
-        } else if (row.hasOwnProperty(col)) {
-          newRow[col.name] = row[col.name];
-        }
+        const defaultName = col.type === 'AggregateExpr' ? col.name : col.columnName;
+        const finalKey = col.alias || defaultName;
+        const objValue = row.hasOwnProperty(finalKey)
+          ? row[finalKey]
+          : resolvePath(row, col.ref);
+        newRow[finalKey] = objValue;
       });
       return newRow;
     });

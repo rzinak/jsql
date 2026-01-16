@@ -6,9 +6,16 @@ export type LogicalOperator = 'AND' | 'OR' | 'NOT';
 // age > 20 for example
 export type ComparisonExpression = {
   "type": "Comparison";
-  "left": string; // should be a column name/identifier
+  "left": ColumnPath; 
   "operator": Operator;
-  "right": number | string | boolean;
+  "right": ColumnPath | LiteralValue;
+}
+
+export type LiteralValue = number | string | boolean | null;
+
+export type ColumnPath = {
+  tableAlias: string | null; // resolved in the "semantic pass" in the validateAST function
+  path: string[]; // ['u', 'age'] or ['20'] or ['preferences', 'sms']
 }
 
 // a logical expression is AND city = "RJ", for example
@@ -50,17 +57,44 @@ export type AggregateExpr = {
 };
 
 export type SelectItem =
-  | { type: "ColumnRef", name: string, alias?: null | string }
-  | { type: "AggregateExpr", name: string, arg: string, alias?: null | string, distinct: boolean };
+  | {
+      type: "ColumnRef";
+      ref: ColumnPath;
+      columnName: string;
+      alias?: null | string;
+    }
+  | {
+      type: "AggregateExpr";
+      ref: ColumnPath;
+      name: string;
+      alias?: null | string;
+      distinct: boolean;
+    }
 
 export type AggregateItem = Extract<SelectItem, {type: "AggregateExpr"}>
 
+export type From = {
+  table: string;
+  alias: string | null;
+}
+
+export type Join = {
+  type: 'INNER' | 'LEFT';
+  table: string;
+  alias: string;
+  on: {
+    left: string;
+    operator: Operator;
+    right: string;
+  }
+}
+
 export type AST = {
-  // "select": string[];
   "select": SelectItem[];
-  "from": string;
+  "from": From;
+  "joins": Join[] | null;
   "where": WhereExpression | null;
-  "groupBy": string[];
+  "groupBy": ColumnPath[];
   "having": HavingExpression | null;
   "order": Order[] | null;
   "limit": number | null;
