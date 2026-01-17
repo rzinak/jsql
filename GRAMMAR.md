@@ -14,6 +14,9 @@ SELECT SUM(age) FROM users GROUP BY city
 SELECT COUNT(DISTINCT city) FROM users
 SELECT name, age FROM users ORDER BY age DESC, name ASC
 SELECT preferences.language as lang, COUNT(*) as total_users FROM example_nested WHERE age >= 25 GROUP BY preferences.language HAVING total_users >= 2
+SELECT * FROM users u
+SELECT u.name, u.age FROM users u WHERE u.age > 18
+SELECT u.name, u.address.street FROM users u
 ```
 
 ---
@@ -29,6 +32,7 @@ ORDER
 BY
 LIMIT
 GROUP
+HAVING
 COUNT
 SUM
 AVG
@@ -67,6 +71,9 @@ LIKE
 ```
 *
 ,
+.
+(
+)
 ```
 
 ### Identifiers
@@ -97,19 +104,21 @@ Names defined by the user:
 
 ## 3. Formal Grammar
 ```
-Query      -> SELECT Columns FROM Table [WHERE Conditions] [GROUP BY GroupClause] [HAVING HavingClause] [ORDER BY OrderClause] [LIMIT Number]
+Query      -> SELECT Columns FROM TableRef [WHERE Conditions] [GROUP BY GroupClause] [HAVING HavingClause] [ORDER BY OrderClause] [LIMIT Number]
 Columns    -> * | ColumnList
 ColumnList -> Column (, Column)*
-Column     -> Identifier [AS Identifier] | Aggregate [AS Identifier]
+Column     -> ColumnPath [AS Identifier] | Aggregate [AS Identifier]
+ColumnPath -> Identifier (. Identifier)*
+TableRef   -> Identifier [Identifier]
 Aggregate  -> Func ( [DISTINCT] Arg )
 Func       -> COUNT | SUM | AVG | MIN | MAX
-Arg        -> * | Identifier
+Arg        -> * | ColumnPath
 Conditions -> Condition ((AND | OR) Condition)*
-Condition  -> Identifier Operator Literal
+Condition  -> ColumnPath Operator Literal
 Operator   -> = | > | < | >= | <= | != | LIKE
 Literal    -> Number | String | Boolean
-GroupClause-> Identifier (, Identifier)*
-HavingClause-> Condition
+GroupClause-> ColumnPath (, ColumnPath)*
+HavingClause-> Condition ((AND | OR) Condition)*
 OrderClause-> OrderSpec (, OrderSpec)*
 OrderSpec  -> Identifier [Direction]
 Direction  -> ASC | DESC
