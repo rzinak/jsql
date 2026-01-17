@@ -82,17 +82,13 @@ export type Join = {
   type: 'INNER' | 'LEFT';
   table: string;
   alias: string;
-  on: {
-    left: string;
-    operator: Operator;
-    right: string;
-  }
+  on: WhereExpression;
 }
 
 export type AST = {
   "select": SelectItem[];
   "from": From;
-  "joins": Join[] | null;
+  "joins": Join[];
   "where": WhereExpression | null;
   "groupBy": ColumnPath[];
   "having": HavingExpression | null;
