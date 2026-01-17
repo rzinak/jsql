@@ -1,4 +1,5 @@
-// TODO: implement JOIN
+// TODO: i implemented INNER JOIN
+// TODO: implement LEFT JOIN
 
 import { evaluate } from "../engine/evaluator.ts";
 import { tokenize } from "../engine/lexer.ts";
@@ -26,9 +27,14 @@ query.value = 'SELECT name, preferences.notifications.sms, meta.views FROM examp
 
 // query.value = 'SELECT COUNT(*) as total, AVG(age) as media_idade FROM example_nested';
 
-// TODO: IMPLEMENT JOIN!
+// TODO: IMPLEMENT LEFT JOIN!
 // JOIN TEST
 // query.value = 'SELECT u.name as usuario, c.name as cidade, c.uf FROM users u JOIN cities c ON u.city_id = c.id';
+
+// passing
+// query.value = 'SELECT c.name, COUNT(*) as total FROM users u JOIN cities c ON u.city_id = c.id GROUP BY c.name';
+
+// query.value = 'SELECT u.name FROM users u JOIN cities c ON u.city_id = c.id WHERE c.uf = "SP"';
 
 const STORAGE_KEY = 'jsql_database';
 const TABLE_KEY = 'jsq_current_table';
@@ -135,11 +141,20 @@ const run = () => {
     resultOutput.textContent = '';
     const tokens = tokenize(query.value);
     const parsed = parse(tokens);
-    if (parsed.from.table !== currentTable) {
-      throw new Error(`Table '${parsed.from.table}' not found. Did you mean '${currentTable}'?`);
+
+    // also i had to change the data i pass to be evaluated, because join wont
+    // work on single inputs, it needs access to all data
+    if (!database.hasOwnProperty(parsed.from.table)) {
+      throw new Error(`Table '${parsed.from.table}' not found in database`);
     }
-    const parsedInputJson = JSON.parse(jsonInput.value);
-    const evaluated = evaluate(parsed, parsedInputJson);
+
+    // if (parsed.from.table !== currentTable) {
+    //   throw new Error(`Table '${parsed.from.table}' not found. Did you mean '${currentTable}'?`);
+    // }
+
+    // const parsedInputJson = JSON.parse(jsonInput.value);
+    // const evaluated = evaluate(parsed, parsedInputJson);
+    const evaluated = evaluate(parsed, database);
     resultOutput.textContent = JSON.stringify(evaluated, null, 2);
     saveState();
   } catch (err: any) {
@@ -147,6 +162,8 @@ const run = () => {
     resultOutput.textContent = err.message;
   }
 }
+
+run();
 
 const showToast = (message: string = 'Copied to clipboard!') => {
   toastMessage.textContent = message;

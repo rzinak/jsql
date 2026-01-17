@@ -2,6 +2,8 @@ import type {
   AST,
   ColumnPath,
   From,
+  Join,
+  LiteralValue,
   Operator,
   Order,
   SelectItem,
@@ -119,12 +121,12 @@ export const parse = (tokens: Token[]): AST => {
   };
 
   const parseFrom = (): From => {
-    consume("KEYWORD", "FROM");
-    const table = consume("IDENTIFIER").value;
+    consume('KEYWORD', 'FROM');
+    const table = consume('IDENTIFIER').value;
     if (!isAtEnd() && peek().type !== 'KEYWORD') {
       return {
         table,
-        alias: consume("IDENTIFIER").value
+        alias: consume('IDENTIFIER').value
       }
     }
     return {
@@ -133,22 +135,37 @@ export const parse = (tokens: Token[]): AST => {
     }
   };
   
-  const parseJoin = () => null;
+  const parseJoin = ()  => {
+    const joins: Join[] = [];
+    if (check('KEYWORD', 'JOIN')) {
+      consume('KEYWORD', 'JOIN');
+      const table = consume('IDENTIFIER').value;
+      let alias: string = consume('IDENTIFIER').value;
+      consume('KEYWORD', 'ON');
+      const on = parseWhereExpression();
+      joins.push({
+        type: 'INNER',
+        table,
+        alias,
+        on
+      });
+    }
+    return joins;
+  };
 
   const parseComparison = (): WhereExpression => {
     const left = parseColumnPath();
     const operator = consume("OPERATOR").value as Operator;
     const rightToken = peek();
 
-    let right: string | number | boolean | null;
+    let right: ColumnPath | LiteralValue;
 
     if (rightToken.type === "NUMBER") {
       right = Number(consume("NUMBER").value);
     } else if (rightToken.type === "STRING") {
       right = consume("STRING").value;
-    } else if (rightToken.type === "KEYWORD" || rightToken.type === "IDENTIFIER") {
+    } else if (rightToken.type === "KEYWORD") {
       const val = rightToken.value.toLowerCase();
-
       if (val === "true") {
         consume(rightToken.type);
         right = true;
@@ -159,7 +176,7 @@ export const parse = (tokens: Token[]): AST => {
         right = consume(rightToken.type).value;
       }
     } else {
-      right = consume(rightToken.type).value;
+      right = parseColumnPath();
     }
     
     return {
@@ -316,6 +333,6 @@ export const parse = (tokens: Token[]): AST => {
     order: parseOrder(),
     limit: parseLimit(),
   };
-
+  
   return ast;
 };
