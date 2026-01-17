@@ -19,5 +19,6 @@ jsql allows you to run SQL queries against JSON datasets directly in the browser
   - `HAVING` clause for filtering grouped results.
   - Columns not in `SELECT` but used in `GROUP BY` are allowed; an arbitrary value from the group is returned (typically the first record).
   - `GROUP BY` columns do not automatically appear in results—only columns specified in `SELECT` are returned.
+- **JOIN Support**: INNER JOIN with ON clause (parsing implemented, evaluation in progress).
 - **Aliases**: Rename columns and aggregates using `AS`.
 - **Instant Feedback**: Runs in real-time in the browser.

@@ -1,4 +1,4 @@
-import type { AggregateItem, AST, ColumnPath, From, HavingExpression, Join, LogicalOperator, Operator, Order, SelectItem, WhereExpression } from "./types";
+import type { AggregateItem, AST, ColumnPath, HavingExpression, Join, LogicalOperator, Operator, Order, SelectItem, WhereExpression } from "./types";
 
 export type DataRow = Record<string, any>;
 
@@ -357,7 +357,7 @@ export const evaluate = (ast: AST, database: Record<string, any[]>) => {
   const mainAliases = ast.from.alias || ast.from.table;
   const joinAliases = ast.joins.map(j => j.alias);
   const allAvailableAliases = [mainAliases, ...joinAliases];
-  const tableAlias = ast.from.alias || ast.from.table;
+  // const tableAlias = ast.from.alias || ast.from.table;
 
   let result = mainData.map(item => ({ [mainTableAlias]: item}));
   
