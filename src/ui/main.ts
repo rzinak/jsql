@@ -1,4 +1,5 @@
-// TODO: implement JOIN
+// TODO: i implemented INNER JOIN
+// TODO: implement LEFT JOIN
 
 import { evaluate } from "../engine/evaluator.ts";
 import { tokenize } from "../engine/lexer.ts";
@@ -20,15 +21,17 @@ const toast = document.getElementById('toast') as HTMLDivElement;
 const toastMessage = document.getElementById('toast-message') as HTMLSpanElement;
 const toastClose = document.getElementById('toast-close') as HTMLButtonElement;
 
-query.value = 'SELECT name, preferences.notifications.sms, meta.views FROM example_nested WHERE preferences.color = blue';
+query.value = 'SELECT u.name as usuario, c.name as cidade, c.uf FROM users u JOIN cities c ON u.city_id = c.id';
+// query.value = 'SELECT name, preferences.notifications.sms, meta.views FROM example_nested WHERE preferences.color = "blue" AND age > 20';
+// query.value = 'SELECT COUNT(*) as total, AVG(age) as media_idade, MAX(meta.views) as recorde_views FROM example_nested';
+// query.value = 'SELECT u.name as usuario, c.name as cidade FROM users u JOIN cities c ON u.city_id = c.id WHERE c.uf = "RJ" ORDER BY u.name DESC';
+// query.value = 'SELECT name FROM users WHERE name LIKE "A%"';
 
-// query.value = 'SELECT preferences.language as lang, COUNT(*) as total_users, AVG(meta.views) as avg_views FROM example_nested WHERE age >= 25 GROUP BY preferences.language HAVING total_users >= 2 ORDER BY avg_views DESC LIMIT 1';
+// FIXME
+// query.value = 'SELECT c.name as cidade, COUNT(u.id) as total_users FROM users u JOIN cities c ON u.city_id = c.id GROUP BY c.name HAVING total_users > 1';
 
-// query.value = 'SELECT COUNT(*) as total, AVG(age) as media_idade FROM example_nested';
-
-// TODO: IMPLEMENT JOIN!
-// JOIN TEST
-// query.value = 'SELECT u.name as usuario, c.name as cidade, c.uf FROM users u JOIN cities c ON u.city_id = c.id';
+// FIXME
+// query.value = 'SELECT name, age FROM example_nested ORDER BY age ASC LIMIT 2';
 
 const STORAGE_KEY = 'jsql_database';
 const TABLE_KEY = 'jsq_current_table';
@@ -135,11 +138,20 @@ const run = () => {
     resultOutput.textContent = '';
     const tokens = tokenize(query.value);
     const parsed = parse(tokens);
-    if (parsed.from.table !== currentTable) {
-      throw new Error(`Table '${parsed.from.table}' not found. Did you mean '${currentTable}'?`);
+
+    // also i had to change the data i pass to be evaluated, because join wont
+    // work on single inputs, it needs access to all data
+    if (!database.hasOwnProperty(parsed.from.table)) {
+      throw new Error(`Table '${parsed.from.table}' not found in database`);
     }
-    const parsedInputJson = JSON.parse(jsonInput.value);
-    const evaluated = evaluate(parsed, parsedInputJson);
+
+    // if (parsed.from.table !== currentTable) {
+    //   throw new Error(`Table '${parsed.from.table}' not found. Did you mean '${currentTable}'?`);
+    // }
+
+    // const parsedInputJson = JSON.parse(jsonInput.value);
+    // const evaluated = evaluate(parsed, parsedInputJson);
+    const evaluated = evaluate(parsed, database);
     resultOutput.textContent = JSON.stringify(evaluated, null, 2);
     saveState();
   } catch (err: any) {

@@ -1,26 +1,28 @@
 import type { Token } from "./types";
 
 export const KEYWORDS = [
-  "SELECT",
-  "FROM",
-  "WHERE",
-  "ORDER",
-  "BY",
-  "AND",
-  "OR",
-  "NOT",
-  "LIMIT",
-  "DESC",
-  "ASC",
-  "GROUP",
-  "COUNT",
-  "AS",
-  "SUM",
-  "AVG",
-  "MAX",
-  "MIN",
-  "DISTINCT",
-  "HAVING"
+  'SELECT',
+  'FROM',
+  'WHERE',
+  'ORDER',
+  'BY',
+  'AND',
+  'OR',
+  'NOT',
+  'LIMIT',
+  'DESC',
+  'ASC',
+  'GROUP',
+  'COUNT',
+  'AS',
+  'SUM',
+  'AVG',
+  'MAX',
+  'MIN',
+  'DISTINCT',
+  'HAVING',
+  'JOIN',
+  'ON'
 ];
 
 export const tokenize = (query: string): Token[] => {

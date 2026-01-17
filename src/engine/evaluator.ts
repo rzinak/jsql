@@ -1,4 +1,4 @@
-import type { AggregateItem, AST, ColumnPath, From, HavingExpression, LogicalOperator, Operator, Order, SelectItem, WhereExpression } from "./types";
+import type { AggregateItem, AST, ColumnPath, HavingExpression, Join, LogicalOperator, Operator, Order, SelectItem, WhereExpression } from "./types";
 
 export type DataRow = Record<string, any>;
 
@@ -25,38 +25,20 @@ const logicalOperators: Record<LogicalOperator, (a: boolean, b: boolean) => bool
   'NOT': (a, _b) => !a
 }
 
-const resolvePath = (row: any, colPath: ColumnPath): number | string => {
-  let current;
-  let finalPath = [...colPath.path];
-  
-  if (colPath.tableAlias) {
-    current = row[colPath.tableAlias];
-    if (finalPath[0] === colPath.tableAlias) {
-      finalPath.shift();
-    }
-  } else {
-    const keys = Object.keys(row);
-    if (keys.length === 1 && row[finalPath[0]] === undefined) {
-      current = row[keys[0]];
-    } else {
-      current = row;
-    }
-  }
-  
-  return finalPath.reduce((acc, key) => {
-    return (acc && acc[key] !== undefined) ? acc[key] : null;
-  }, current);
-  
-}
 
-const verifyTableAlias = (selectItems: SelectItem[], fromItems: From) => {
+
+const verifyTableAlias = (selectItems: SelectItem[], validAliases: string[]) => {
   selectItems.forEach(item => {
+    const usedAlias = item.ref.tableAlias;
+    if (usedAlias && !validAliases.includes(usedAlias)) {
+      console.error(`Table or Alias '${usedAlias}' was not found.`);
+    }
     // if the provided tableAlias doesnt match the tableAlies inside From,
     // i assume its a column, instead of throwing an error
-    if (item.ref.tableAlias && item.ref.tableAlias !== fromItems.alias) {
-      /* if (fromItems.alias === null && item.ref.tableAlias) {
+    /*  if (item.ref.tableAlias && item.ref.tableAlias !== fromItems.alias) {
+      if (fromItems.alias === null && item.ref.tableAlias) {
         throw new Error(`Error when evaluating table alias '${item.ref.tableAlias}'. Are you sure a table with this alias exist?`);
-      } */
+      }
 
       const itemName =
         item.type === 'AggregateExpr'
@@ -66,7 +48,7 @@ const verifyTableAlias = (selectItems: SelectItem[], fromItems: From) => {
       console.warn(`Anyway, now assuming that '${item.ref.tableAlias}' is a column!`);
       // throw new Error(`Error when evaluating '${item.ref.tableAlias}.${itemName!}', there is no table with the alias '${item.ref.tableAlias}'. Did you mean '${fromItems.alias}.${itemName}'?`)
       item.ref.tableAlias = null;
-    } 
+    } */
   });
 }
 
@@ -78,6 +60,7 @@ const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boo
 
     if (typeof right === 'object' && right !== null && 'path' in right) {
       rightVal = resolvePath(row, right);
+      // console.log('rightVal;',rightVal);
     } else {
       rightVal = right;
     }
@@ -276,12 +259,114 @@ const applyOrdering = (result: DataRow[], orders: Order[] | null): DataRow[] => 
 
   return result;
 }
+ 
+const resolvePath = (row: any, colPath: ColumnPath): number | string => {
+  let current;
+  let finalPath = [...colPath.path];
+  
+  if (colPath.tableAlias) {
+    current = row[colPath.tableAlias];
+    if (finalPath[0] === colPath.tableAlias) {
+      finalPath.shift();
+    }
+  } else {
+    const keys = Object.keys(row);
+    if (keys.length === 1 && row[finalPath[0]] === undefined) {
+      current = row[keys[0]];
+    } else {
+      current = row;
+    }
+  }
+  
+  return finalPath.reduce((acc, key) => {
+    return (acc && acc[key] !== undefined) ? acc[key] : null;
+  }, current);
+}
 
-export const evaluate = (ast: AST, data: any[]) => {
-  const tableAlias = ast.from.alias || ast.from.table;
-  let result = data.map(item => ({ [tableAlias]: item}));
+const resolveAstAliases = (ast: AST) => {
+  const validAliases = [
+    ast.from.alias || ast.from.table,
+    ...(ast.joins || []).map(j => j.alias)
+  ];
+  
+  const fixPath = (colPath: ColumnPath) => {
+    if (colPath.path.length > 1 && validAliases.includes(colPath.path[0])) {
+      colPath.tableAlias = colPath.path[0];
+      colPath.path.shift();
+    }
+  }
 
-  verifyTableAlias(ast.select, ast.from);
+  const traverseExpression = (expr: WhereExpression | null) => {
+    if (!expr) return;
+
+    if (expr.type === 'Comparison') {
+      fixPath(expr.left);
+      if (typeof expr.right === 'object' && expr.right !== null && 'path' in expr.right) {
+        fixPath(expr.right as ColumnPath);
+      }
+    } else if (expr.type === 'LogicalBinary') {
+      traverseExpression(expr.left);
+      traverseExpression(expr.right);
+    } else if (expr.type === 'LogicalUnary') {
+      traverseExpression(expr.operand);
+    }
+  }
+
+  ast.select.forEach(item => fixPath(item.ref));
+  ast.joins.forEach(j => traverseExpression(j.on));
+  traverseExpression(ast.where);
+  ast.groupBy.forEach(colPath => fixPath(colPath));
+  traverseExpression(ast.having);
+}
+
+const evaluateJoins = (currentResult: any[], joins: Join[], database: Record<string, any[]>) => {
+  let joinedResult = [...currentResult];
+
+  joins.forEach(join => {
+
+    const tableToJoin = database[join.table];
+    const tempStep: any[] = [];
+    
+    joinedResult.forEach(rowA => {
+      tableToJoin.forEach(itemB => {
+        const combinedRow = { ...rowA, [join.alias]: itemB };
+        if (evaluateWhereExpression(join.on, combinedRow)) {
+          tempStep.push(combinedRow);
+        }
+      });
+    });
+    joinedResult = tempStep;
+  });
+
+  return joinedResult;
+}
+
+// added database as param because for JOIN to work i need to work on all input jsons
+// database = all input jsons
+export const evaluate = (ast: AST, database: Record<string, any[]>) => {
+  resolveAstAliases(ast);
+
+  const mainTableName = ast.from.table;
+  const mainData = database[mainTableName];
+
+  if (!mainData) throw new Error(`Table '${mainTableName}' not found`);
+
+  const mainTableAlias = ast.from.alias || mainTableName;
+
+  // remove?
+  const mainAliases = ast.from.alias || ast.from.table;
+  const joinAliases = ast.joins.map(j => j.alias);
+  const allAvailableAliases = [mainAliases, ...joinAliases];
+  // const tableAlias = ast.from.alias || ast.from.table;
+
+  let result = mainData.map(item => ({ [mainTableAlias]: item}));
+  
+  
+  verifyTableAlias(ast.select, allAvailableAliases);
+
+  if (ast.joins && ast.joins.length > 0) {
+    result = evaluateJoins(result, ast.joins, database);
+  }
 
   if (ast.where) {
     result = result.filter((row) => evaluateWhereExpression(ast.where!, row));

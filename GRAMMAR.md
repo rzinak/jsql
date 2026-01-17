@@ -17,6 +17,7 @@ SELECT preferences.language as lang, COUNT(*) as total_users FROM example_nested
 SELECT * FROM users u
 SELECT u.name, u.age FROM users u WHERE u.age > 18
 SELECT u.name, u.address.street FROM users u
+SELECT u.name as usuario, c.name as cidade, c.uf FROM users u JOIN cities c ON u.city_id = c.id
 ```
 
 ---
@@ -40,6 +41,8 @@ MIN
 MAX
 AS
 DISTINCT
+JOIN
+ON
 ```
 
 ### Logical Operators
@@ -104,12 +107,13 @@ Names defined by the user:
 
 ## 3. Formal Grammar
 ```
-Query      -> SELECT Columns FROM TableRef [WHERE Conditions] [GROUP BY GroupClause] [HAVING HavingClause] [ORDER BY OrderClause] [LIMIT Number]
+Query      -> SELECT Columns FROM TableRef [JOIN JoinClause] [WHERE Conditions] [GROUP BY GroupClause] [HAVING HavingClause] [ORDER BY OrderClause] [LIMIT Number]
 Columns    -> * | ColumnList
 ColumnList -> Column (, Column)*
 Column     -> ColumnPath [AS Identifier] | Aggregate [AS Identifier]
 ColumnPath -> Identifier (. Identifier)*
 TableRef   -> Identifier [Identifier]
+JoinClause -> Identifier Identifier ON Conditions
 Aggregate  -> Func ( [DISTINCT] Arg )
 Func       -> COUNT | SUM | AVG | MIN | MAX
 Arg        -> * | ColumnPath
