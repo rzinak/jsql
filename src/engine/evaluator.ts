@@ -69,7 +69,7 @@ const evaluateWhereExpression = (expression: WhereExpression, row: DataRow): boo
     if (!opFunction) {
       throw new Error(`Unknown operator: ${operator}`);
     }
-    
+
     if (leftVal && rightVal) {
       return opFunction(leftVal, rightVal);
     }
@@ -188,14 +188,14 @@ const applyGrouping = (result: DataRow[], groupByColumns: ColumnPath[], selectIt
   }
 
   const groups: { [key: string]: DataRow[] } = {};
-  
+
   result.forEach(row => {
     const groupKey = groupByColumns
       .map(colPath => {
         const val = resolvePath(row, colPath);
         return typeof val === 'object' ? JSON.stringify(val) : val;
       }).join('-');
-    
+
     if (!groups[groupKey]) {
       groups[groupKey] = [];
     }
@@ -211,7 +211,7 @@ const applyGrouping = (result: DataRow[], groupByColumns: ColumnPath[], selectIt
       const val = item.type === 'ColumnRef'
         ? resolvePath(firstRow, item.ref)
         : calculateAggregate(item, groupRows);
-      
+
       if (item.type === 'ColumnRef') {
         const nested = item.ref.path.reduceRight((acc, key) => ({ [key]: acc }), val as any);
         Object.assign(newRow, nested);
@@ -225,7 +225,7 @@ const applyGrouping = (result: DataRow[], groupByColumns: ColumnPath[], selectIt
         }
       }
     });
-    
+
     return newRow;
     // i added this filter because i didn't find another way of removing null values from the result
     // if COUNT receives a column instead of '*'.
@@ -247,8 +247,8 @@ const applyOrdering = (result: DataRow[], orders: Order[] | null): DataRow[] => 
       const prop = order.prop;
       const direction = order.direction;
 
-      const valA = a[prop];
-      const valB = b[prop];
+      const valA = Object.values(a)[0][prop];
+      const valB = Object.values(b)[0][prop];
 
       if (valA < valB) return direction === 'ASC' ? -1 : 1;
       if (valA > valB) return direction === 'ASC' ? 1 : -1;
@@ -259,11 +259,11 @@ const applyOrdering = (result: DataRow[], orders: Order[] | null): DataRow[] => 
 
   return result;
 }
- 
+
 const resolvePath = (row: any, colPath: ColumnPath): number | string => {
   let current;
   let finalPath = [...colPath.path];
-  
+
   if (colPath.tableAlias) {
     current = row[colPath.tableAlias];
     if (finalPath[0] === colPath.tableAlias) {
@@ -277,7 +277,7 @@ const resolvePath = (row: any, colPath: ColumnPath): number | string => {
       current = row;
     }
   }
-  
+
   return finalPath.reduce((acc, key) => {
     return (acc && acc[key] !== undefined) ? acc[key] : null;
   }, current);
@@ -288,7 +288,7 @@ const resolveAstAliases = (ast: AST) => {
     ast.from.alias || ast.from.table,
     ...(ast.joins || []).map(j => j.alias)
   ];
-  
+
   const fixPath = (colPath: ColumnPath) => {
     if (colPath.path.length > 1 && validAliases.includes(colPath.path[0])) {
       colPath.tableAlias = colPath.path[0];
@@ -326,7 +326,7 @@ const evaluateJoins = (currentResult: any[], joins: Join[], database: Record<str
 
     const tableToJoin = database[join.table];
     const tempStep: any[] = [];
-    
+
     joinedResult.forEach(rowA => {
       tableToJoin.forEach(itemB => {
         const combinedRow = { ...rowA, [join.alias]: itemB };
@@ -359,9 +359,9 @@ export const evaluate = (ast: AST, database: Record<string, any[]>) => {
   const allAvailableAliases = [mainAliases, ...joinAliases];
   // const tableAlias = ast.from.alias || ast.from.table;
 
-  let result = mainData.map(item => ({ [mainTableAlias]: item}));
-  
-  
+  let result = mainData.map(item => ({ [mainTableAlias]: item }));
+
+
   verifyTableAlias(ast.select, allAvailableAliases);
 
   if (ast.joins && ast.joins.length > 0) {
@@ -371,9 +371,9 @@ export const evaluate = (ast: AST, database: Record<string, any[]>) => {
   if (ast.where) {
     result = result.filter((row) => evaluateWhereExpression(ast.where!, row));
   }
-  
+
   const hasAggregate = ast.select.some(item => item.type === 'AggregateExpr');
-  
+
   if (hasAggregate && ast.groupBy.length === 0) {
     const summaryRow: any = {};
     ast.select.map(item => {
@@ -387,22 +387,22 @@ export const evaluate = (ast: AST, database: Record<string, any[]>) => {
       }
       return summaryRow;
     });
-    result = [summaryRow]; 
+    result = [summaryRow];
   }
-  
+
   if (ast.groupBy.length > 0) {
     result = applyGrouping(result, ast.groupBy, ast.select);
     if (ast.having) {
       result = result.filter((row) => evaluateHavingExpression(ast.having!, row));
     }
   }
-  
+
   result = applyOrdering(result, ast.order);
 
   if (ast.limit) {
     result = result.slice(0, ast.limit);
   }
-  
+
   const itemName =
     ast.select[0].type === 'AggregateExpr'
       ? ast.select[0].name
